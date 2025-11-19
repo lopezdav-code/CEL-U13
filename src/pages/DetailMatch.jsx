@@ -3,23 +3,23 @@ import { Helmet } from 'react-helmet';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  getMatch,
-  getJoueuses,
-  getClubs,
-  updateMatch,
-  deleteMatch,
-  createPartie,
-  updatePartie,
-  deletePartie,
-  getCompositionForMatch,
-  addComposition,
-  removeComposition,
-  updateComposition,
-  getButsForMatch,
-  addBut,
-  removeBut,
-  uploadMatchPhotos, // Corrected import name from previous user request
-  deleteMatchPhoto,
+    getMatch,
+    getJoueuses,
+    getClubs,
+    updateMatch,
+    deleteMatch,
+    createPartie,
+    updatePartie,
+    deletePartie,
+    getCompositionForMatch,
+    addComposition,
+    removeComposition,
+    updateComposition,
+    getButsForMatch,
+    addBut,
+    removeBut,
+    uploadMatchPhotos,
+    deleteMatchPhotoFromMatch,
 } from '@/lib/storage';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -29,263 +29,263 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-  DialogTrigger, // Added DialogTrigger
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogClose,
+    DialogTrigger, // Added DialogTrigger
 } from '@/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
-  Loader2,
-  Calendar,
-  Clock,
-  MapPin,
-  Shield,
-  Users,
-  PlusCircle,
-  Trash2,
-  Edit,
-  Save,
-  X,
-  Goal,
-  Award,
-  Trophy,
-  Plane,
-  Home,
-  Camera,
-  Upload,
-  ArrowLeft,
-  ChevronsUpDown,
+    Loader2,
+    Calendar,
+    Clock,
+    MapPin,
+    Shield,
+    Users,
+    PlusCircle,
+    Trash2,
+    Edit,
+    Save,
+    X,
+    Goal,
+    Award,
+    Trophy,
+    Plane,
+    Home,
+    Camera,
+    Upload,
+    ArrowLeft,
+    ChevronsUpDown,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const DetailMatch = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const { toast } = useToast();
 
-  const [match, setMatch] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+    const [match, setMatch] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedMatch, setEditedMatch] = useState(null);
-  const [clubs, setClubs] = useState([]);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedMatch, setEditedMatch] = useState(null);
+    const [clubs, setClubs] = useState([]);
 
-  const [composition, setComposition] = useState([]);
-  const [buts, setButs] = useState([]);
-  const [joueuses, setJoueuses] = useState([]);
+    const [composition, setComposition] = useState([]);
+    const [buts, setButs] = useState([]);
+    const [joueuses, setJoueuses] = useState([]);
 
-  const [isCompositionOpen, setIsCompositionOpen] = useState(false);
-  const [isButsOpen, setIsButsOpen] = useState(false);
-  const [isPartieOpen, setIsPartieOpen] = useState(false);
-  const [isPhotoOpen, setIsPhotoOpen] = useState(false);
+    const [isCompositionOpen, setIsCompositionOpen] = useState(false);
+    const [isButsOpen, setIsButsOpen] = useState(false);
+    const [isPartieOpen, setIsPartieOpen] = useState(false);
+    const [isPhotoOpen, setIsPhotoOpen] = useState(false);
 
-  const [selectedPartie, setSelectedPartie] = useState(null);
+    const [selectedPartie, setSelectedPartie] = useState(null);
 
-  const fetchMatchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [matchData, joueusesData, clubsData, compositionData, butsData] = await Promise.all([
-        getMatch(id),
-        getJoueuses(),
-        getClubs(),
-        getCompositionForMatch(id),
-        getButsForMatch(id),
-      ]);
+    const fetchMatchData = useCallback(async () => {
+        try {
+            setLoading(true);
+            const [matchData, joueusesData, clubsData, compositionData, butsData] = await Promise.all([
+                getMatch(id),
+                getJoueuses(),
+                getClubs(),
+                getCompositionForMatch(id),
+                getButsForMatch(id),
+            ]);
 
-      if (matchData) {
-        setMatch(matchData);
-        setEditedMatch(matchData);
-        setComposition(compositionData);
-        setButs(butsData);
-      } else {
-        setError("Match non trouvé.");
-      }
-      setJoueuses(joueusesData);
-      setClubs(clubsData);
-    } catch (err) {
-      console.error(err);
-      setError("Erreur lors du chargement du match.");
-      toast({
-        title: "❌ Erreur de chargement",
-        description: "Impossible de récupérer les détails du match.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+            if (matchData) {
+                setMatch(matchData);
+                setEditedMatch(matchData);
+                setComposition(compositionData);
+                setButs(butsData);
+            } else {
+                setError("Match non trouvé.");
+            }
+            setJoueuses(joueusesData);
+            setClubs(clubsData);
+        } catch (err) {
+            console.error(err);
+            setError("Erreur lors du chargement du match.");
+            toast({
+                title: "❌ Erreur de chargement",
+                description: "Impossible de récupérer les détails du match.",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [id, toast]);
+
+    useEffect(() => {
+        fetchMatchData();
+    }, [fetchMatchData]);
+
+    const handleEditToggle = () => {
+        if (isEditing) {
+            setEditedMatch(match); // Reset changes
+        }
+        setIsEditing(!isEditing);
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setEditedMatch(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    };
+
+    const handleSelectChange = (name, value) => {
+        const newEditedMatch = { ...editedMatch, [name]: value };
+        if (name === 'type_match') {
+            if (value === 'tournoi' || value === 'coupe') {
+                newEditedMatch.adversaire_id = null;
+                newEditedMatch.is_multi_partie = true;
+            } else {
+                newEditedMatch.titre = '';
+            }
+        }
+        setEditedMatch(newEditedMatch);
+    };
+
+    const handleSave = async () => {
+        setLoading(true);
+        try {
+            await updateMatch(id, editedMatch);
+            setMatch(editedMatch);
+            setIsEditing(false);
+            toast({ title: "✅ Succès", description: "Le match a été mis à jour." });
+        } catch (err) {
+            console.error(err);
+            toast({ title: "❌ Erreur", description: "Impossible de mettre à jour le match.", variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            await deleteMatch(id);
+            toast({ title: "✅ Succès", description: "Le match a été supprimé." });
+            navigate('/matchs');
+        } catch (err) {
+            console.error(err);
+            toast({ title: "❌ Erreur", description: "Impossible de supprimer le match.", variant: "destructive" });
+        }
+    };
+
+    const openPartieDialog = (partie) => {
+        setSelectedPartie(partie);
+        setIsPartieOpen(true);
+    };
+
+    if (loading) {
+        return <div className="flex justify-center items-center h-screen"><Loader2 className="w-16 h-16 animate-spin text-green-600" /></div>;
     }
-  }, [id, toast]);
 
-  useEffect(() => {
-    fetchMatchData();
-  }, [fetchMatchData]);
-  
-  const handleEditToggle = () => {
-    if (isEditing) {
-      setEditedMatch(match); // Reset changes
+    if (error) {
+        return <div className="text-center py-10 text-red-500">{error}</div>;
     }
-    setIsEditing(!isEditing);
-  };
-  
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setEditedMatch(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-  };
 
-  const handleSelectChange = (name, value) => {
-    const newEditedMatch = { ...editedMatch, [name]: value };
-    if (name === 'type_match') {
-      if (value === 'tournoi' || value === 'coupe') {
-        newEditedMatch.adversaire_id = null;
-        newEditedMatch.is_multi_partie = true;
-      } else {
-        newEditedMatch.titre = '';
-      }
+    if (!match) {
+        return <div className="text-center py-10">Aucun match trouvé.</div>;
     }
-    setEditedMatch(newEditedMatch);
-  };
-  
-  const handleSave = async () => {
-    setLoading(true);
-    try {
-      await updateMatch(id, editedMatch);
-      setMatch(editedMatch);
-      setIsEditing(false);
-      toast({ title: "✅ Succès", description: "Le match a été mis à jour." });
-    } catch (err) {
-      console.error(err);
-      toast({ title: "❌ Erreur", description: "Impossible de mettre à jour le match.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleDelete = async () => {
-    try {
-      await deleteMatch(id);
-      toast({ title: "✅ Succès", description: "Le match a été supprimé." });
-      navigate('/matchs');
-    } catch (err) {
-      console.error(err);
-      toast({ title: "❌ Erreur", description: "Impossible de supprimer le match.", variant: "destructive" });
-    }
-  };
-  
-  const openPartieDialog = (partie) => {
-    setSelectedPartie(partie);
-    setIsPartieOpen(true);
-  };
+    const isSpecialType = editedMatch.type_match === 'tournoi' || editedMatch.type_match === 'coupe';
+    const matchDate = new Date(match.date_match);
+    const isPastMatch = matchDate < new Date();
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen"><Loader2 className="w-16 h-16 animate-spin text-green-600" /></div>;
-  }
+    return (
+        <>
+            <Helmet>
+                <title>Détail du match - {match.nom_adversaire || 'Titre'}</title>
+            </Helmet>
 
-  if (error) {
-    return <div className="text-center py-10 text-red-500">{error}</div>;
-  }
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div className="flex justify-between items-start">
+                    <Link to="/matchs">
+                        <Button variant="ghost" className="mb-4"><ArrowLeft className="mr-2 h-4 w-4" /> Retour aux matchs</Button>
+                    </Link>
+                </div>
 
-  if (!match) {
-    return <div className="text-center py-10">Aucun match trouvé.</div>;
-  }
-  
-  const isSpecialType = editedMatch.type_match === 'tournoi' || editedMatch.type_match === 'coupe';
-  const matchDate = new Date(match.date_match);
-  const isPastMatch = matchDate < new Date();
+                <HeaderMatch match={match} onEdit={handleEditToggle} isEditing={isEditing} />
 
-  return (
-    <>
-      <Helmet>
-        <title>Détail du match - {match.nom_adversaire || 'Titre'}</title>
-      </Helmet>
+                {isEditing ? (
+                    <EditMatchForm
+                        editedMatch={editedMatch}
+                        onInputChange={handleInputChange}
+                        onSelectChange={handleSelectChange}
+                        clubs={clubs}
+                        isSpecialType={isSpecialType}
+                        onSave={handleSave}
+                        onCancel={handleEditToggle}
+                        onDelete={handleDelete}
+                    />
+                ) : (
+                    <DisplayMatchInfo match={match} />
+                )}
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-8"
-      >
-        <div className="flex justify-between items-start">
-            <Link to="/matchs">
-                <Button variant="ghost" className="mb-4"><ArrowLeft className="mr-2 h-4 w-4" /> Retour aux matchs</Button>
-            </Link>
-        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <CompositionSection
+                        composition={composition}
+                        joueuses={joueuses}
+                        matchId={id}
+                        onCompositionUpdate={fetchMatchData}
+                        isPastMatch={isPastMatch}
+                        onOpenChange={setIsCompositionOpen}
+                    />
+                    <ButsSection
+                        buts={buts}
+                        composition={composition}
+                        matchId={id}
+                        onButsUpdate={fetchMatchData}
+                        isPastMatch={isPastMatch}
+                        onOpenChange={setIsButsOpen}
+                    />
+                </div>
 
-        <HeaderMatch match={match} onEdit={handleEditToggle} isEditing={isEditing} />
+                <PartiesSection
+                    match={match}
+                    onPartieUpdate={fetchMatchData}
+                    openPartieDialog={openPartieDialog}
+                    isPastMatch={isPastMatch}
+                    onOpenChange={setIsPartieOpen}
+                />
 
-        {isEditing ? (
-            <EditMatchForm 
-                editedMatch={editedMatch} 
-                onInputChange={handleInputChange} 
-                onSelectChange={handleSelectChange}
+                <PhotosSection
+                    match={match}
+                    onPhotosUpdate={fetchMatchData}
+                    onOpenChange={setIsPhotoOpen}
+                />
+            </motion.div>
+
+            <PartieDialog
+                isOpen={isPartieOpen}
+                onOpenChange={setIsPartieOpen}
+                partie={selectedPartie}
+                matchId={id}
                 clubs={clubs}
-                isSpecialType={isSpecialType}
-                onSave={handleSave} 
-                onCancel={handleEditToggle}
-                onDelete={handleDelete}
+                onPartieUpdate={fetchMatchData}
+                isMultiPartie={match.is_multi_partie}
             />
-        ) : (
-            <DisplayMatchInfo match={match} />
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <CompositionSection
-                composition={composition}
-                joueuses={joueuses}
-                matchId={id}
-                onCompositionUpdate={fetchMatchData}
-                isPastMatch={isPastMatch}
-                onOpenChange={setIsCompositionOpen}
-            />
-            <ButsSection
-                buts={buts}
-                composition={composition}
-                matchId={id}
-                onButsUpdate={fetchMatchData}
-                isPastMatch={isPastMatch}
-                onOpenChange={setIsButsOpen}
-            />
-        </div>
-        
-        <PartiesSection
-            match={match}
-            onPartieUpdate={fetchMatchData}
-            openPartieDialog={openPartieDialog}
-            isPastMatch={isPastMatch}
-            onOpenChange={setIsPartieOpen}
-        />
-        
-        <PhotosSection
-            match={match}
-            onPhotosUpdate={fetchMatchData}
-            onOpenChange={setIsPhotoOpen}
-        />
-      </motion.div>
-
-      <PartieDialog
-        isOpen={isPartieOpen}
-        onOpenChange={setIsPartieOpen}
-        partie={selectedPartie}
-        matchId={id}
-        clubs={clubs}
-        onPartieUpdate={fetchMatchData}
-        isMultiPartie={match.is_multi_partie}
-      />
-    </>
-  );
+        </>
+    );
 };
 
 const HeaderMatch = ({ match, onEdit, isEditing }) => (
@@ -383,9 +383,9 @@ const DisplayMatchInfo = ({ match }) => (
             <InfoBlock icon={<ChevronsUpDown />} label="Format" value={match.is_multi_partie ? 'Plateau' : 'Match simple'} />
             <InfoBlock icon={
                 match.type_match === 'championnat' ? <Trophy /> :
-                match.type_match === 'amical' ? <Users /> :
-                match.type_match === 'tournoi' ? <Award /> :
-                <Shield />
+                    match.type_match === 'amical' ? <Users /> :
+                        match.type_match === 'tournoi' ? <Award /> :
+                            <Shield />
             } label="Type" value={match.type_match} />
         </div>
         {match.commentaire && (
@@ -442,13 +442,13 @@ const CompositionSection = ({ composition, joueuses, matchId, onCompositionUpdat
             toast({ title: "❌ Erreur", description: "Impossible de retirer la joueuse.", variant: "destructive" });
         }
     };
-    
+
     const toggleGardienne = async (comp) => {
         try {
             await updateComposition(comp.id, { gardienne: !comp.gardienne });
             await onCompositionUpdate();
             toast({ title: "✅ Succès", description: "Statut de gardienne mis à jour." });
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             toast({ title: "❌ Erreur", description: "Impossible de mettre à jour le statut.", variant: "destructive" });
         }
@@ -464,7 +464,7 @@ const CompositionSection = ({ composition, joueuses, matchId, onCompositionUpdat
                             <span className="font-medium">{comp.joueuse.prenom} {comp.joueuse.nom}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                             <Button size="icon" variant={comp.gardienne ? "default" : "outline"} onClick={() => toggleGardienne(comp)}>
+                            <Button size="icon" variant={comp.gardienne ? "default" : "outline"} onClick={() => toggleGardienne(comp)}>
                                 <Shield className={`w-4 h-4 ${comp.gardienne ? 'text-white' : ''}`} />
                             </Button>
                             <Button size="icon" variant="ghost" onClick={() => handleRemoveJoueuse(comp.id)}><Trash2 className="w-4 h-4 text-red-500" /></Button>
@@ -578,7 +578,7 @@ const ButsSection = ({ buts, composition, matchId, onButsUpdate, isPastMatch, on
 
 const PartiesSection = ({ match, onPartieUpdate, openPartieDialog, isPastMatch, onOpenChange }) => {
     const { toast } = useToast();
-    
+
     const handleCreatePartie = async () => {
         try {
             await createPartie({ match_id: match.id, score_equipe: 0, score_adversaire: 0 });
@@ -589,7 +589,7 @@ const PartiesSection = ({ match, onPartieUpdate, openPartieDialog, isPastMatch, 
             toast({ title: "❌ Erreur", description: "Impossible d'ajouter la partie.", variant: "destructive" });
         }
     };
-    
+
     return (
         <Card title={match.is_multi_partie ? 'Scores des parties' : 'Score Final'}>
             {match.is_multi_partie ? (
@@ -669,7 +669,7 @@ const PartieDialog = ({ isOpen, onOpenChange, partie, matchId, clubs, onPartieUp
             setLoading(false);
         }
     };
-    
+
     const handleDelete = async () => {
         try {
             await deletePartie(editedPartie.id);
@@ -677,7 +677,7 @@ const PartieDialog = ({ isOpen, onOpenChange, partie, matchId, clubs, onPartieUp
             onOpenChange(false);
             toast({ title: "✅ Succès", description: "Partie supprimée." });
         } catch (err) {
-             console.error(err);
+            console.error(err);
             toast({ title: "❌ Erreur", description: "Impossible de supprimer la partie.", variant: "destructive" });
         }
     }
@@ -716,7 +716,7 @@ const PartieDialog = ({ isOpen, onOpenChange, partie, matchId, clubs, onPartieUp
                     )}
                 </div>
                 <DialogFooter className="justify-between">
-                     {isMultiPartie ? (
+                    {isMultiPartie ? (
                         <AlertDialog>
                             <AlertDialogTrigger asChild><Button variant="destructive" disabled={loading}>Supprimer</Button></AlertDialogTrigger>
                             <AlertDialogContent>
@@ -724,10 +724,10 @@ const PartieDialog = ({ isOpen, onOpenChange, partie, matchId, clubs, onPartieUp
                                 <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={handleDelete}>Supprimer</AlertDialogAction></AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
-                     ) : <div></div>}
+                    ) : <div></div>}
                     <div className="flex gap-2">
-                      <DialogClose asChild><Button variant="outline" disabled={loading}>Annuler</Button></DialogClose>
-                      <Button onClick={handleSave} disabled={loading}>{loading ? <Loader2 className="animate-spin" /> : 'Enregistrer'}</Button>
+                        <DialogClose asChild><Button variant="outline" disabled={loading}>Annuler</Button></DialogClose>
+                        <Button onClick={handleSave} disabled={loading}>{loading ? <Loader2 className="animate-spin" /> : 'Enregistrer'}</Button>
                     </div>
                 </DialogFooter>
             </DialogContent>
@@ -746,9 +746,6 @@ const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
 
         setIsUploading(true);
         try {
-            // Note: The storage function is `uploadMatchPhotos` which expects matchId and files
-            // The previous code had `uploadMatchPhoto(file, match.id)` which is not how it's structured in src/lib/storage.js
-            // It should be `uploadMatchPhotos(match.id, files)`
             await uploadMatchPhotos(match.id, files);
             await onPhotosUpdate();
             toast({ title: "✅ Succès", description: "Photo(s) ajoutée(s)." });
@@ -760,10 +757,10 @@ const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
             e.target.value = null; // Clear the input so same files can be selected again
         }
     };
-    
+
     const handleDeletePhoto = async (photoPath) => {
         try {
-            await deleteMatchPhoto(match.id, photoPath); // deleteMatchPhoto now correctly takes matchId and photoPath
+            await deleteMatchPhotoFromMatch(match.id, photoPath);
             await onPhotosUpdate();
             toast({ title: "✅ Succès", description: "Photo supprimée." });
         } catch (err) {
@@ -785,7 +782,7 @@ const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
                 ))}
             </div>
             {(!match.photos || match.photos.length === 0) && (
-                 <p className="text-gray-500 italic text-center py-4">Aucune photo pour ce match.</p>
+                <p className="text-gray-500 italic text-center py-4">Aucune photo pour ce match.</p>
             )}
             <input type="file" multiple ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
             <Button onClick={() => fileInputRef.current.click()} className="w-full mt-4" variant="outline" disabled={isUploading}>

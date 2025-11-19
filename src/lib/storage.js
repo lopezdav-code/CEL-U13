@@ -70,11 +70,11 @@ export const updateCoach = async (id, data, photoFile) => {
       .from(COACH_AVATAR_BUCKET_NAME)
       .upload(photoPath, photoFile);
     if (uploadError) {
-        console.error("Error uploading coach photo:", uploadError)
-        throw uploadError;
+      console.error("Error uploading coach photo:", uploadError)
+      throw uploadError;
     }
   }
-  
+
   const dataToUpdate = {
     prenom: data.prenom,
     nom: data.nom,
@@ -126,7 +126,7 @@ export const createClub = async (data, logoFile) => {
     .insert([{ nom: data.nom, stade: data.stade, logo: logoPath }])
     .select()
     .single();
-  
+
   if (createError) throw createError;
   return newClub;
 };
@@ -224,30 +224,90 @@ export const uploadMatchPhoto = async (file, matchId) => {
 };
 
 export const getMatchPhotoUrl = async (path) => {
-    if (!path) return null;
-    try {
-        const { data, error } = await supabase.storage
-            .from(MATCH_PHOTO_BUCKET_NAME)
-            .createSignedUrl(path, 60 * 60); // URL valide pour 1 heure
-        if (error) {
-            throw error;
-        }
-        return data.signedUrl;
-    } catch (error) {
-        console.error('Error creating signed URL for match photo:', error.message);
-        return null;
+  if (!path) return null;
+  try {
+    const { data, error } = await supabase.storage
+      .from(MATCH_PHOTO_BUCKET_NAME)
+      .createSignedUrl(path, 60 * 60); // URL valide pour 1 heure
+    if (error) {
+      throw error;
     }
+    return data.signedUrl;
+  } catch (error) {
+    console.error('Error creating signed URL for match photo:', error.message);
+    return null;
+  }
 };
 
 export const deleteMatchPhoto = async (path) => {
-    if (!path) return;
-    const { error } = await supabase.storage
-        .from(MATCH_PHOTO_BUCKET_NAME)
-        .remove([path]);
-    if (error) {
-        console.error('Error deleting match photo:', error.message);
-        throw error;
-    }
+  if (!path) return;
+  const { error } = await supabase.storage
+    .from(MATCH_PHOTO_BUCKET_NAME)
+    .remove([path]);
+  if (error) {
+    console.error('Error deleting match photo:', error.message);
+    throw error;
+  }
+};
+
+// Upload multiple photos and update match photos array
+export const uploadMatchPhotos = async (matchId, files) => {
+  const uploadedPaths = [];
+
+  for (const file of files) {
+    const photoPath = await uploadMatchPhoto(file, matchId);
+    uploadedPaths.push(photoPath);
+  }
+
+  // Get current match photos
+  const { data: currentMatch } = await supabase
+    .from('matchs')
+    .select('photos')
+    .eq('id', matchId)
+    .single();
+
+  const currentPhotos = currentMatch?.photos || [];
+  const updatedPhotos = [...currentPhotos, ...uploadedPaths];
+
+  // Update match with new photos array
+  const { error } = await supabase
+    .from('matchs')
+    .update({ photos: updatedPhotos })
+    .eq('id', matchId);
+
+  if (error) {
+    console.error('Error updating match photos:', error.message);
+    throw error;
+  }
+
+  return uploadedPaths;
+};
+
+// Delete photo from storage and update match photos array
+export const deleteMatchPhotoFromMatch = async (matchId, photoPath) => {
+  // Delete from storage
+  await deleteMatchPhoto(photoPath);
+
+  // Get current match photos
+  const { data: currentMatch } = await supabase
+    .from('matchs')
+    .select('photos')
+    .eq('id', matchId)
+    .single();
+
+  const currentPhotos = currentMatch?.photos || [];
+  const updatedPhotos = currentPhotos.filter(p => p !== photoPath);
+
+  // Update match with new photos array
+  const { error } = await supabase
+    .from('matchs')
+    .update({ photos: updatedPhotos })
+    .eq('id', matchId);
+
+  if (error) {
+    console.error('Error updating match photos after deletion:', error.message);
+    throw error;
+  }
 };
 
 export const getAllMatchPhotos = async () => {
@@ -265,7 +325,7 @@ export const getAllMatchPhotos = async () => {
   const allPhotos = await Promise.all(
     matchs
       .filter(match => match.photos && match.photos.length > 0)
-      .flatMap(match => 
+      .flatMap(match =>
         match.photos.map(async (photoPath) => {
           const photoUrl = await getMatchPhotoUrl(photoPath);
           return {
@@ -294,7 +354,7 @@ export const getJoueuses = async () => {
     console.error('Error fetching joueuses:', error.message);
     throw error;
   }
-  
+
   const joueusesWithDetails = await Promise.all(
     data.map(async (j) => {
       const avatarUrl = await getAvatarUrl(j.photo_principale);
@@ -317,7 +377,7 @@ export const getJoueuse = async (id) => {
   }
   const avatarUrl = await getAvatarUrl(data.photo_principale);
   const age = calculateAge(data.date_de_naissance);
-  return {...data, age, avatarUrl};
+  return { ...data, age, avatarUrl };
 };
 
 export const createJoueuse = async (data, avatarFile) => {
@@ -326,13 +386,13 @@ export const createJoueuse = async (data, avatarFile) => {
 
   const { data: newJoueuse, error: createError } = await supabase
     .from('joueuse')
-    .insert([{ 
+    .insert([{
       nom: data.nom,
       prenom: data.prenom,
       date_de_naissance: data.date_de_naissance,
       nom_parents: data.nom_parents,
       classe: classe,
-      date_creation: new Date().toISOString() 
+      date_creation: new Date().toISOString()
     }])
     .select()
     .single();
@@ -345,7 +405,7 @@ export const createJoueuse = async (data, avatarFile) => {
   if (avatarFile) {
     const avatarPath = await uploadAvatar(avatarFile, newJoueuse.id);
     const { data: updatedJoueuse, error: updateError } = await updateJoueuse(newJoueuse.id, { photo_principale: avatarPath }, null);
-    if(updateError) throw updateError;
+    if (updateError) throw updateError;
     return updatedJoueuse;
   }
 
@@ -362,7 +422,7 @@ export const updateJoueuse = async (id, data, avatarFile) => {
     }
     avatarPath = await uploadAvatar(avatarFile, id);
   }
-  
+
   const age = calculateAge(data.date_de_naissance);
   const classe = data.classe || (age ? determineClasse(age) : data.classe);
 
@@ -411,67 +471,67 @@ export const deleteJoueuse = async (id) => {
 
 // --- Matchs (Supabase) ---
 export const getMatchs = async (filter = {}) => {
-    let query = supabase
-      .from('matchs')
-      .select(`
+  let query = supabase
+    .from('matchs')
+    .select(`
         *,
         adversaire:adversaire_id ( nom, logo ),
         composition(joueuse_id),
         parties:match_partie!match_partie_match_id_fkey(score_equipe, score_adversaire, adversaire_id)
       `);
-      
-    if (filter.type && filter.type !== 'all') {
-        query = query.eq('type_match', filter.type);
+
+  if (filter.type && filter.type !== 'all') {
+    query = query.eq('type_match', filter.type);
+  }
+
+  const { data: matchs, error } = await query.order('date_match', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching matchs with composition:', error);
+    throw error;
+  }
+
+  return matchs.map(match => {
+    let wins = 0, losses = 0, draws = 0;
+    if (match.parties) {
+      match.parties.forEach(partie => {
+        if (partie.score_equipe > partie.score_adversaire) {
+          wins++;
+        } else if (partie.score_equipe < partie.score_adversaire) {
+          losses++;
+        } else {
+          draws++;
+        }
+      });
     }
 
-    const { data: matchs, error } = await query.order('date_match', { ascending: false });
+    const composition_joueuse_ids = match.composition.map(c => c.joueuse_id);
 
-    if (error) {
-        console.error('Error fetching matchs with composition:', error);
-        throw error;
+    const nom_adversaire = match.type_match === 'tournoi' || match.type_match === 'coupe'
+      ? match.titre || (match.type_match === 'tournoi' ? 'Tournoi' : 'Coupe')
+      : match.adversaire?.nom || 'Adversaire';
+
+    const adversaireLogoUrl = match.adversaire?.logo ? supabase.storage.from(CLUB_LOGO_BUCKET_NAME).getPublicUrl(match.adversaire.logo).data.publicUrl : null;
+
+    // For simple matches, derive score from the first (and only) partie
+    let score_equipe = null;
+    let score_adversaire = null;
+    if (!match.is_multi_partie && match.parties && match.parties.length > 0) {
+      score_equipe = match.parties[0].score_equipe;
+      score_adversaire = match.parties[0].score_adversaire;
     }
-    
-    return matchs.map(match => {
-        let wins = 0, losses = 0, draws = 0;
-        if (match.parties) {
-            match.parties.forEach(partie => {
-                if (partie.score_equipe > partie.score_adversaire) {
-                    wins++;
-                } else if (partie.score_equipe < partie.score_adversaire) {
-                    losses++;
-                } else {
-                    draws++;
-                }
-            });
-        }
-        
-        const composition_joueuse_ids = match.composition.map(c => c.joueuse_id);
-        
-        const nom_adversaire = match.type_match === 'tournoi' || match.type_match === 'coupe'
-            ? match.titre || (match.type_match === 'tournoi' ? 'Tournoi' : 'Coupe')
-            : match.adversaire?.nom || 'Adversaire';
 
-        const adversaireLogoUrl = match.adversaire?.logo ? supabase.storage.from(CLUB_LOGO_BUCKET_NAME).getPublicUrl(match.adversaire.logo).data.publicUrl : null;
-
-        // For simple matches, derive score from the first (and only) partie
-        let score_equipe = null;
-        let score_adversaire = null;
-        if (!match.is_multi_partie && match.parties && match.parties.length > 0) {
-          score_equipe = match.parties[0].score_equipe;
-          score_adversaire = match.parties[0].score_adversaire;
-        }
-
-        return {
-            ...match,
-            nom_adversaire,
-            adversaire_logo_url: adversaireLogoUrl,
-            composition: composition_joueuse_ids,
-            composition_count: composition_joueuse_ids.length,
-            partie_stats: { wins, losses, draws },
-            score_equipe,
-            score_adversaire
-        };
-    });
+    return {
+      ...match,
+      nom_adversaire,
+      adversaire_logo_url: adversaireLogoUrl,
+      composition: composition_joueuse_ids,
+      composition_count: composition_joueuse_ids.length,
+      partie_stats: { wins, losses, draws },
+      score_equipe,
+      score_adversaire
+    };
+  });
 };
 
 export const getMatch = async (id) => {
@@ -488,18 +548,18 @@ export const getMatch = async (id) => {
     console.error('Error fetching match:', error.message);
     throw error;
   }
-  
+
   const nom_adversaire = data.type_match === 'tournoi' || data.type_match === 'coupe'
-      ? data.titre || (data.type_match === 'tournoi' ? 'Tournoi' : 'Coupe')
-      : data.adversaire?.nom || 'Adversaire';
+    ? data.titre || (data.type_match === 'tournoi' ? 'Tournoi' : 'Coupe')
+    : data.adversaire?.nom || 'Adversaire';
 
   const adversaireLogoUrl = data.adversaire?.logo ? supabase.storage.from(CLUB_LOGO_BUCKET_NAME).getPublicUrl(data.adversaire.logo).data.publicUrl : null;
-  
+
   const parties = (data.parties || []).map(p => {
     const partieAdversaireNom = p.adversaire ? p.adversaire.nom : 'Adversaire';
     const partieAdversaireLogoUrl = p.adversaire?.logo ? supabase.storage.from(CLUB_LOGO_BUCKET_NAME).getPublicUrl(p.adversaire.logo).data.publicUrl : null;
     return { ...p, nom_equipe_adverse: partieAdversaireNom, adversaire_logo_url: partieAdversaireLogoUrl };
-  }).sort((a,b) => a.id - b.id);
+  }).sort((a, b) => a.id - b.id);
 
   let finalData = { ...data, nom_adversaire, adversaire_logo_url: adversaireLogoUrl, parties };
 
@@ -514,12 +574,12 @@ export const getMatch = async (id) => {
 
   if (finalData && finalData.photos) {
     const photoUrls = await Promise.all(
-        (finalData.photos || []).map(path => getMatchPhotoUrl(path))
+      (finalData.photos || []).map(path => getMatchPhotoUrl(path))
     );
     return { ...finalData, photoUrls: photoUrls.filter(Boolean) };
   }
-  
-  return {...finalData, photoUrls: []};
+
+  return { ...finalData, photoUrls: [] };
 };
 
 export const createMatch = async (data) => {
@@ -607,10 +667,10 @@ export const updateMatch = async (id, data) => {
 
 export const deleteMatch = async (id) => {
   const { data: matchData } = await supabase.from('matchs').select('photos').eq('id', id).single();
-  if(matchData && matchData.photos){
+  if (matchData && matchData.photos) {
     await supabase.storage.from(MATCH_PHOTO_BUCKET_NAME).remove(matchData.photos);
   }
-  
+
   await supabase.from('buts').delete().eq('match_id', id);
   await supabase.from('composition').delete().eq('match_id', id);
   await supabase.from('match_partie').delete().eq('match_id', id);
@@ -650,7 +710,7 @@ export const updatePartie = async (id, partieData) => {
   if ('adversaire_id' in dataToUpdate && !dataToUpdate.adversaire_id) {
     dataToUpdate.adversaire_id = null;
   }
-    
+
   const { data, error } = await supabase
     .from('match_partie')
     .update(dataToUpdate)
@@ -694,7 +754,7 @@ export const getCompositionForMatch = async (matchId) => {
     console.error('Error fetching composition:', error.message);
     throw error;
   }
-  
+
   const compositionWithAvatars = await Promise.all(
     (data || []).map(async c => {
       const avatarUrl = await getAvatarUrl(c.joueuse.photo_principale);
@@ -806,17 +866,17 @@ export const getButsByJoueuse = async (joueuseId) => {
     .from('buts')
     .select('match_id, nombre_de_buts')
     .eq('joueuse_id', joueuseId);
-  
+
   if (error) {
     console.error('Error fetching goals by player:', error);
     return {};
   }
-  
+
   const butsParMatch = data.reduce((acc, but) => {
     acc[but.match_id] = (acc[but.match_id] || 0) + (but.nombre_de_buts || 0);
     return acc;
   }, {});
-  
+
   return butsParMatch;
 };
 
@@ -832,7 +892,7 @@ export const getJoueusesStats = async (matchType = 'all') => {
   let matchQuery = supabase
     .from('matchs')
     .select('id, type_match, is_away, composition(joueuse_id, gardienne)');
-    
+
   if (matchType !== 'all') {
     matchQuery = matchQuery.eq('type_match', matchType);
   }
@@ -856,7 +916,7 @@ export const getJoueusesStats = async (matchType = 'all') => {
   // 4. Process stats
   const stats = await Promise.all(joueuses.map(async (joueuse) => {
     const avatarUrl = await getAvatarUrl(joueuse.photo_principale);
-    
+
     let matchesPlayedHome = 0;
     let matchesPlayedAway = 0;
     let nb_fois_gardienne = 0;
@@ -973,49 +1033,49 @@ export const getMatchsForJoueuse = async (joueuseId) => {
 };
 
 export const getTeamStats = async () => {
-    // 1. Récupérer les ID des matchs dont la date est passée
-    const today = new Date().toISOString().split('T')[0];
-    const { data: pastMatches, error: matchError } = await supabase
-      .from('matchs')
-      .select('id')
-      .lt('date_match', today);
-      
-    if(matchError) {
-        console.error("Error fetching past matches:", matchError);
-        throw matchError;
+  // 1. Récupérer les ID des matchs dont la date est passée
+  const today = new Date().toISOString().split('T')[0];
+  const { data: pastMatches, error: matchError } = await supabase
+    .from('matchs')
+    .select('id')
+    .lt('date_match', today);
+
+  if (matchError) {
+    console.error("Error fetching past matches:", matchError);
+    throw matchError;
+  }
+
+  const pastMatchIds = pastMatches.map(m => m.id);
+
+  // 2. Compter le nombre de parties et la somme des buts pour ces matchs passés
+  let totalMatchs = 0;
+  let totalButs = 0;
+
+  if (pastMatchIds.length > 0) {
+    const { data: partiesData, error: partieError } = await supabase
+      .from('match_partie')
+      .select('score_equipe')
+      .in('match_id', pastMatchIds);
+
+    if (partieError) {
+      console.error("Error fetching total parties data:", partieError);
+      throw partieError;
     }
 
-    const pastMatchIds = pastMatches.map(m => m.id);
+    totalMatchs = partiesData.length;
+    totalButs = partiesData.reduce((sum, current) => sum + (current.score_equipe || 0), 0);
+  }
 
-    // 2. Compter le nombre de parties et la somme des buts pour ces matchs passés
-    let totalMatchs = 0;
-    let totalButs = 0;
-
-    if (pastMatchIds.length > 0) {
-      const { data: partiesData, error: partieError } = await supabase
-        .from('match_partie')
-        .select('score_equipe')
-        .in('match_id', pastMatchIds);
-      
-      if (partieError) {
-        console.error("Error fetching total parties data:", partieError);
-        throw partieError;
-      }
-      
-      totalMatchs = partiesData.length;
-      totalButs = partiesData.reduce((sum, current) => sum + (current.score_equipe || 0), 0);
-    }
-    
-    return {
-        totalMatchs,
-        totalButs
-    };
+  return {
+    totalMatchs,
+    totalButs
+  };
 };
 
 export const getOpponentStats = async () => {
-    const { data: matches, error } = await supabase
-        .from('matchs')
-        .select(`
+  const { data: matches, error } = await supabase
+    .from('matchs')
+    .select(`
             type_match,
             adversaire:adversaire_id (id, nom, logo),
             parties:match_partie!match_partie_match_id_fkey(
@@ -1024,44 +1084,44 @@ export const getOpponentStats = async () => {
                 adversaire:adversaire_id(id, nom, logo)
             )
         `)
-        .not('parties', 'is', null);
+    .not('parties', 'is', null);
 
-    if (error) {
-        console.error("Error fetching matches for opponent stats:", error);
-        throw error;
-    }
+  if (error) {
+    console.error("Error fetching matches for opponent stats:", error);
+    throw error;
+  }
 
-    const stats = {};
+  const stats = {};
 
-    matches.forEach(match => {
-        match.parties.forEach(partie => {
-            const opponent = partie.adversaire || match.adversaire;
-            if (!opponent || !opponent.id) return;
+  matches.forEach(match => {
+    match.parties.forEach(partie => {
+      const opponent = partie.adversaire || match.adversaire;
+      if (!opponent || !opponent.id) return;
 
-            if (!stats[opponent.id]) {
-                stats[opponent.id] = {
-                    id: opponent.id,
-                    nom: opponent.nom,
-                    logoUrl: opponent.logo ? supabase.storage.from(CLUB_LOGO_BUCKET_NAME).getPublicUrl(opponent.logo).data.publicUrl : null,
-                    wins: 0,
-                    draws: 0,
-                    losses: 0,
-                    totalMatches: 0,
-                };
-            }
+      if (!stats[opponent.id]) {
+        stats[opponent.id] = {
+          id: opponent.id,
+          nom: opponent.nom,
+          logoUrl: opponent.logo ? supabase.storage.from(CLUB_LOGO_BUCKET_NAME).getPublicUrl(opponent.logo).data.publicUrl : null,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+          totalMatches: 0,
+        };
+      }
 
-            stats[opponent.id].totalMatches++;
-            if (partie.score_equipe > partie.score_adversaire) {
-                stats[opponent.id].wins++;
-            } else if (partie.score_equipe < partie.score_adversaire) {
-                stats[opponent.id].losses++;
-            } else {
-                stats[opponent.id].draws++;
-            }
-        });
+      stats[opponent.id].totalMatches++;
+      if (partie.score_equipe > partie.score_adversaire) {
+        stats[opponent.id].wins++;
+      } else if (partie.score_equipe < partie.score_adversaire) {
+        stats[opponent.id].losses++;
+      } else {
+        stats[opponent.id].draws++;
+      }
     });
+  });
 
-    return Object.values(stats);
+  return Object.values(stats);
 };
 
 
