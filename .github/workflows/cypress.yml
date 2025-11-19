@@ -9,6 +9,10 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: [1, 2]
     
     steps:
       - name: Checkout code
@@ -28,12 +32,14 @@ jobs:
         env:
           CYPRESS_TEST_EMAIL: ${{ secrets.CYPRESS_TEST_EMAIL }}
           CYPRESS_TEST_PASSWORD: ${{ secrets.CYPRESS_TEST_PASSWORD }}
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           start: npm run dev
           wait-on: 'http://localhost:3000'
           wait-on-timeout: 120
-          browser: chrome
-          headed: false
+          record: true
+          parallel: true
       
       - name: Upload screenshots on failure
         uses: actions/upload-artifact@v4
