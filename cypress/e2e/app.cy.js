@@ -30,12 +30,45 @@ describe('Application E2E Tests', () => {
         cy.url().should('match', /\/(login)?/)
     })
 
-    it('should navigate through the application', () => {
-        // This test will depend on your authentication setup
-        // For now, just check that the page structure exists
-        cy.get('body').should('exist')
+    it('should login with valid credentials', () => {
+        // Get credentials from environment variables
+        const email = Cypress.env('TEST_EMAIL')
+        const password = Cypress.env('TEST_PASSWORD')
 
-        // You can add more specific navigation tests here
-        // once you have authentication working
+        // Skip test if credentials are not configured
+        if (!email || !password) {
+            cy.log('Skipping login test - credentials not configured')
+            return
+        }
+
+        // Use the custom login command
+        cy.login(email, password)
+
+        // Wait for potential redirect or authentication
+        cy.wait(1000)
+
+        // Verify we're no longer on the login page
+        // (adjust this assertion based on your app's behavior after login)
+        cy.url().should('not.match', /login/)
+    })
+
+    it('should navigate through the application after login', () => {
+        const email = Cypress.env('TEST_EMAIL')
+        const password = Cypress.env('TEST_PASSWORD')
+
+        // Skip test if credentials are not configured
+        if (!email || !password) {
+            cy.log('Skipping navigation test - credentials not configured')
+            return
+        }
+
+        // Login first
+        cy.login(email, password)
+        cy.wait(1000)
+
+        // Add navigation tests here based on your application
+        // For example:
+        // cy.get('[data-testid="menu-matchs"]').click()
+        // cy.url().should('include', '/matchs')
     })
 })

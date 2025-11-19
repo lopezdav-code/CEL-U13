@@ -25,6 +25,9 @@ jobs:
       
       - name: Run Cypress tests
         uses: cypress-io/github-action@v6
+        env:
+          CYPRESS_TEST_EMAIL: ${{ secrets.CYPRESS_TEST_EMAIL }}
+          CYPRESS_TEST_PASSWORD: ${{ secrets.CYPRESS_TEST_PASSWORD }}
         with:
           start: npm run dev
           wait-on: 'http://localhost:3000'
