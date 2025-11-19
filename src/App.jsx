@@ -36,7 +36,7 @@ function App() {
         <title>CEL Pôle Féminin Côtière Est Lyonnais U13 - Gestion d'équipe</title>
         <meta name="description" content="Application de gestion et suivi d'équipe de football féminin U13 - CEL Pôle Féminin Côtière Est Lyonnais" />
       </Helmet>
-      <Router>
+      <Router basename={import.meta.env.BASE_URL}>
         <AnimatePresence mode="wait">
           <Routes>
             <Route path="/login" element={<Login />} />
