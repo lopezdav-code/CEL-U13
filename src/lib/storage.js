@@ -1127,29 +1127,19 @@ export const getOpponentStats = async () => {
 
 // --- Users (Admin) ---
 export const getUsers = async () => {
-  const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
-    .select('id, name, role');
+  const { data, error } = await supabase.functions.invoke('list-users');
 
-  if (profilesError) {
-    console.error('Error fetching profiles:', profilesError.message);
-    throw profilesError;
+  if (error) {
+    console.error('Fetch error from list-users function:', error);
+    throw new Error(error.message || 'Failed to fetch users');
   }
 
-  const userIds = profiles.map(p => p.id);
-
-  const { data: authUsers, error: authUsersError } = await supabase.auth.admin.listUsers();
-  if (authUsersError) {
-    console.error('Error fetching auth users:', authUsersError.message);
-    throw authUsersError;
+  if (data.error) {
+    console.error('Error from list-users function:', data.error);
+    throw new Error(data.error);
   }
 
-  const authUsersMap = new Map(authUsers.users.map(user => [user.id, user]));
-
-  return profiles.map(profile => ({
-    ...profile,
-    email: authUsersMap.get(profile.id)?.email || 'N/A',
-  }));
+  return data.users;
 };
 
 export const updateUserRole = async (id, role) => {

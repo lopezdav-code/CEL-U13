@@ -11,11 +11,30 @@ export const AuthProvider = ({ children }) => {
 
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const handleSession = useCallback(async (session) => {
     setSession(session);
     setUser(session?.user ?? null);
+
+    // Fetch user profile from profiles table
+    if (session?.user) {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!error && profileData) {
+        setProfile(profileData);
+      } else {
+        setProfile(null);
+      }
+    } else {
+      setProfile(null);
+    }
+
     setLoading(false);
   }, []);
 
@@ -146,13 +165,14 @@ export const AuthProvider = ({ children }) => {
   const value = useMemo(() => ({
     user,
     session,
+    profile,
     loading,
     supabase,
     signIn,
     signOut,
     adminCreateUser,
     changePassword,
-  }), [user, session, loading, signIn, signOut, adminCreateUser, changePassword]);
+  }), [user, session, profile, loading, signIn, signOut, adminCreateUser, changePassword]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
