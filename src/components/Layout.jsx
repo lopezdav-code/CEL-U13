@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, Users, Shield, Image, BarChart2, LogOut, Menu, X, BrainCircuit } from 'lucide-react';
+import { Home, Users, Shield, Image, BarChart2, LogOut, Menu, X, BrainCircuit, User as UserIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import {
   DropdownMenu,
@@ -54,10 +54,9 @@ const Layout = ({ children }) => {
                 <NavLink
                   to={to}
                   className={({ isActive }) =>
-                    `flex items-center px-4 py-2 my-1 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-green-100 text-green-700'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    `flex items-center px-4 py-2 my-1 rounded-md text-sm font-medium transition-colors ${isActive
+                      ? 'bg-green-100 text-green-700'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`
                   }
                 >
@@ -82,13 +81,13 @@ const Layout = ({ children }) => {
                 </Button>
               </div>
 
-               {/* Logo for mobile */}
+              {/* Logo for mobile */}
               <div className="lg:hidden">
                 <Link to="/" className="flex items-center gap-2">
-                   <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
+                  <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
                 </Link>
               </div>
-              
+
               {/* Spacer on desktop */}
               <div className="hidden lg:block flex-1" />
 
@@ -96,10 +95,10 @@ const Layout = ({ children }) => {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                       <Avatar className="h-9 w-9">
-                          <AvatarImage src={profile?.avatar_url} alt={profile?.name || user?.email} />
-                          <AvatarFallback>{getInitials(profile?.name || user?.email)}</AvatarFallback>
-                        </Avatar>
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={profile?.avatar_url} alt={profile?.name || user?.email} />
+                        <AvatarFallback>{getInitials(profile?.name || user?.email)}</AvatarFallback>
+                      </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
@@ -110,12 +109,18 @@ const Layout = ({ children }) => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      <span>Mon profil</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     {profile?.role === 'admin' && (
-                        <>
-                            <DropdownMenuItem onClick={() => navigate('/admin-clubs')}>Gestion des clubs</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate('/admin-users')}>Gestion des utilisateurs</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                        </>
+                      <>
+                        <DropdownMenuItem onClick={() => navigate('/admin-clubs')}>Gestion des clubs</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/admin-users')}>Gestion des utilisateurs</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/admin-docs')}>Documentation technique</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
                     )}
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
@@ -136,10 +141,9 @@ const Layout = ({ children }) => {
                     to={to}
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center px-3 py-2 rounded-md text-base font-medium ${
-                        isActive
-                          ? 'bg-green-100 text-green-700'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
+                        ? 'bg-green-100 text-green-700'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                       }`
                     }
                   >

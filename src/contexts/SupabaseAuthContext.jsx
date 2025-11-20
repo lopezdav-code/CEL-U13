@@ -38,18 +38,18 @@ export const AuthProvider = ({ children }) => {
 
   const signIn = useCallback(async (identifier, password) => {
     const email = isEmail(identifier) ? identifier : `${identifier}@example.com`; // Keep dummy for login flexibility
-    
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-        let description = "Veuillez vérifier votre login et mot de passe.";
-        if (!error.message.includes("Invalid login credentials")) {
-            description = error.message;
-        }
-       toast({
+      let description = "Veuillez vérifier votre login et mot de passe.";
+      if (!error.message.includes("Invalid login credentials")) {
+        description = error.message;
+      }
+      toast({
         variant: "destructive",
         title: "La connexion a échoué",
         description,
@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     }
     return { error };
   }, [toast]);
-  
+
   const adminCreateUser = useCallback(async (email, password, name, role) => {
     const { data, error } = await supabase.functions.invoke('create-user-and-profile', {
       body: { email, password, name, role },
@@ -90,9 +90,58 @@ export const AuthProvider = ({ children }) => {
         description: `Le compte pour "${name}" a été créé avec succès.`,
       });
     }
-    
+
     return { data, error: null };
   }, [toast]);
+
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
+    if (!user) {
+      const error = new Error("Aucun utilisateur connecté");
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Vous devez être connecté pour changer votre mot de passe.",
+      });
+      return { error };
+    }
+
+    // First verify the current password by attempting to sign in
+    const email = user.email;
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email,
+      password: currentPassword,
+    });
+
+    if (verifyError) {
+      toast({
+        variant: "destructive",
+        title: "Mot de passe incorrect",
+        description: "Le mot de passe actuel que vous avez saisi est incorrect.",
+      });
+      return { error: verifyError };
+    }
+
+    // If verification successful, update to new password
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (updateError) {
+      toast({
+        variant: "destructive",
+        title: "Erreur de mise à jour",
+        description: updateError.message || "Impossible de changer le mot de passe.",
+      });
+      return { error: updateError };
+    }
+
+    toast({
+      title: "✅ Mot de passe modifié!",
+      description: "Votre mot de passe a été changé avec succès.",
+    });
+
+    return { error: null };
+  }, [user, toast]);
 
   const value = useMemo(() => ({
     user,
@@ -102,7 +151,8 @@ export const AuthProvider = ({ children }) => {
     signIn,
     signOut,
     adminCreateUser,
-  }), [user, session, loading, signIn, signOut, adminCreateUser]);
+    changePassword,
+  }), [user, session, loading, signIn, signOut, adminCreateUser, changePassword]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -13,6 +13,8 @@ import Statistiques from '@/pages/Statistiques';
 import AdminClubs from '@/pages/AdminClubs';
 import AdminUsers from '@/pages/AdminUsers';
 import Quiz from '@/pages/Quiz';
+import Profile from '@/pages/Profile';
+import AdminDocs from '@/pages/AdminDocs';
 import Login from '@/pages/Login';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Toaster } from '@/components/ui/toaster';
@@ -55,8 +57,10 @@ function App() {
                       <Route path="/photos" element={<Photos />} />
                       <Route path="/statistiques" element={<Statistiques />} />
                       <Route path="/quiz" element={<Quiz />} />
+                      <Route path="/profile" element={<Profile />} />
                       <Route path="/admin-clubs" element={<AdminClubs />} />
                       <Route path="/admin-users" element={<AdminUsers />} />
+                      <Route path="/admin-docs" element={<AdminDocs />} />
                     </Routes>
                   </Layout>
                 </ProtectedRoute>
