@@ -14,7 +14,8 @@ Cypress.Commands.add('login', (email, password) => {
     const loginPassword = password || Cypress.env('TEST_PASSWORD')
 
     cy.visit('/login')
-    cy.get('#identifier').type(loginEmail)
-    cy.get('#password').type(loginPassword)
-    cy.contains('button', 'Se connecter').click()
+    // Wait for the form to be visible (handling framer-motion animations)
+    cy.get('#identifier').should('be.visible').type(loginEmail)
+    cy.get('#password').should('be.visible').type(loginPassword)
+    cy.contains('button', 'Se connecter').should('be.visible').click()
 })
