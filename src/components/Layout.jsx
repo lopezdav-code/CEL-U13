@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, Users, Shield, Image, BarChart2, LogOut, Menu, X, BrainCircuit, User as UserIcon } from 'lucide-react';
+import { Home, Users, Shield, Image, BarChart2, LogOut, Menu, X, BrainCircuit, User as UserIcon, Book, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import {
   DropdownMenu,
@@ -66,6 +66,58 @@ const Layout = ({ children }) => {
               </li>
             ))}
           </ul>
+
+          {profile?.role === 'admin' && (
+            <>
+              <div className="mt-6 mb-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Administration
+              </div>
+              <ul>
+                <li>
+                  <NavLink
+                    to="/admin-clubs"
+                    className={({ isActive }) =>
+                      `flex items-center px-4 py-2 my-1 rounded-md text-sm font-medium transition-colors ${isActive
+                        ? 'bg-green-100 text-green-700'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`
+                    }
+                  >
+                    <Settings className="mr-3 h-5 w-5" />
+                    Clubs
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/admin-users"
+                    className={({ isActive }) =>
+                      `flex items-center px-4 py-2 my-1 rounded-md text-sm font-medium transition-colors ${isActive
+                        ? 'bg-green-100 text-green-700'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`
+                    }
+                  >
+                    <Users className="mr-3 h-5 w-5" />
+                    Utilisateurs
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/admin-docs"
+                    className={({ isActive }) =>
+                      `flex items-center px-4 py-2 my-1 rounded-md text-sm font-medium transition-colors ${isActive
+                        ? 'bg-green-100 text-green-700'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`
+                    }
+                  >
+                    <Book className="mr-3 h-5 w-5" />
+                    Documentation
+                  </NavLink>
+                </li>
+              </ul>
+            </>
+          )}
         </nav>
       </aside>
 
@@ -151,6 +203,53 @@ const Layout = ({ children }) => {
                     {text}
                   </NavLink>
                 ))}
+
+                {profile?.role === 'admin' && (
+                  <>
+                    <div className="mt-4 mb-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Administration
+                    </div>
+                    <NavLink
+                      to="/admin-clubs"
+                      onClick={() => setIsMenuOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`
+                      }
+                    >
+                      <Settings className="mr-3 h-6 w-6" />
+                      Clubs
+                    </NavLink>
+                    <NavLink
+                      to="/admin-users"
+                      onClick={() => setIsMenuOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`
+                      }
+                    >
+                      <Users className="mr-3 h-6 w-6" />
+                      Utilisateurs
+                    </NavLink>
+                    <NavLink
+                      to="/admin-docs"
+                      onClick={() => setIsMenuOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`
+                      }
+                    >
+                      <Book className="mr-3 h-6 w-6" />
+                      Documentation
+                    </NavLink>
+                  </>
+                )}
               </nav>
             </div>
           )}
