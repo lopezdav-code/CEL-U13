@@ -104,14 +104,14 @@ const AdminSpecs = () => {
                 <div className="bg-white rounded-lg shadow-md border p-6 sm:p-8">
                     <div className="prose prose-slate max-w-none
             prose-headings:text-gray-900
-            prose-h1:text-3xl prose-h1:font-bold prose-h1:border-b prose-h1:pb-2 prose-h1:mb-4
-            prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-4
-            prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3
+            prose-h1:text-5xl prose-h1:font-extrabold prose-h1:border-b-2 prose-h1:pb-4 prose-h1:mb-10 prose-h1:mt-16 prose-h1:text-green-700
+            prose-h2:text-3xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-gray-800
+            prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-4
             prose-p:text-gray-700 prose-p:leading-relaxed
             prose-a:text-green-600 prose-a:no-underline hover:prose-a:underline
             prose-code:text-pink-600 prose-code:bg-pink-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
             prose-pre:bg-gray-900 prose-pre:text-gray-100
-            prose-img:rounded-lg prose-img:shadow-md prose-img:border prose-img:my-6
+            prose-img:rounded-lg prose-img:shadow-md prose-img:border prose-img:my-8 prose-img:mx-auto prose-img:max-w-[300px] prose-img:w-full
             prose-blockquote:border-l-4 prose-blockquote:border-green-500 prose-blockquote:pl-4 prose-blockquote:italic
           ">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
