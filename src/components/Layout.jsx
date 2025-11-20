@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, Users, Shield, Image, BarChart2, LogOut, Menu, X, BrainCircuit, User as UserIcon, Book, Settings } from 'lucide-react';
+import { Home, Users, Shield, Image, BarChart2, LogOut, Menu, X, BrainCircuit, User as UserIcon, Book, BookOpen, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import {
   DropdownMenu,
@@ -115,6 +115,20 @@ const Layout = ({ children }) => {
                     Documentation
                   </NavLink>
                 </li>
+                <li>
+                  <NavLink
+                    to="/admin-specs"
+                    className={({ isActive }) =>
+                      `flex items-center px-4 py-2 my-1 rounded-md text-sm font-medium transition-colors ${isActive
+                        ? 'bg-green-100 text-green-700'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`
+                    }
+                  >
+                    <BookOpen className="mr-3 h-5 w-5" />
+                    Spécifications
+                  </NavLink>
+                </li>
               </ul>
             </>
           )}
@@ -171,6 +185,7 @@ const Layout = ({ children }) => {
                         <DropdownMenuItem onClick={() => navigate('/admin-clubs')}>Gestion des clubs</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate('/admin-users')}>Gestion des utilisateurs</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate('/admin-docs')}>Documentation technique</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/admin-specs')}>Spécifications fonctionnelles</DropdownMenuItem>
                         <DropdownMenuSeparator />
                       </>
                     )}
@@ -247,6 +262,19 @@ const Layout = ({ children }) => {
                     >
                       <Book className="mr-3 h-6 w-6" />
                       Documentation
+                    </NavLink>
+                    <NavLink
+                      to="/admin-specs"
+                      onClick={() => setIsMenuOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`
+                      }
+                    >
+                      <BookOpen className="mr-3 h-6 w-6" />
+                      Spécifications
                     </NavLink>
                   </>
                 )}

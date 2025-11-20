@@ -15,6 +15,7 @@ import AdminUsers from '@/pages/AdminUsers';
 import Quiz from '@/pages/Quiz';
 import Profile from '@/pages/Profile';
 import AdminDocs from '@/pages/AdminDocs';
+import AdminSpecs from '@/pages/AdminSpecs';
 import Login from '@/pages/Login';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Toaster } from '@/components/ui/toaster';
@@ -61,6 +62,7 @@ function App() {
                       <Route path="/admin-clubs" element={<AdminClubs />} />
                       <Route path="/admin-users" element={<AdminUsers />} />
                       <Route path="/admin-docs" element={<AdminDocs />} />
+                      <Route path="/admin-specs" element={<AdminSpecs />} />
                     </Routes>
                   </Layout>
                 </ProtectedRoute>
