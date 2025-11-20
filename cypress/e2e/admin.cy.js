@@ -14,12 +14,12 @@ describe('Admin Management', () => {
         cy.get('h1').should('contain', 'Gestion des Clubs')
 
         // Check list exists
-        cy.get('table, .grid').should('exist')
+        cy.get('div.grid').should('exist')
 
         // Test adding a club (optional, might need cleanup)
-        cy.contains('button', 'Ajouter').click()
-        cy.get('input[name="nom"]').type('Club Test Cypress')
-        // cy.contains('button', 'Sauvegarder').click()
+        cy.contains('button', 'Nouveau Club').click()
+        cy.get('input#nom').type('Club Test Cypress')
+        // cy.contains('button', 'Enregistrer').click()
         // cy.contains('Club Test Cypress').should('exist')
     })
 

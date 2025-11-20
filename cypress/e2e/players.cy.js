@@ -36,10 +36,12 @@ describe('Player Management', () => {
 
         // Verify player info is displayed
         cy.get('h1').invoke('text').should('not.be.empty') // Name
-        cy.contains('Poste').should('be.visible')
 
-        // Verify stats are present (assuming a stats section or similar)
-        // Adjust selectors based on actual UI
-        cy.get('.grid').should('exist') // Stats grid
+        // Verify stats are present
+        cy.contains('Matchs joués').should('be.visible')
+        cy.contains('Buts marqués').should('be.visible')
+
+        // Verify stats grid exists
+        cy.get('.grid').should('exist')
     })
 })

@@ -31,7 +31,7 @@ describe('Profile & Password Change', () => {
 
     it('should display user information correctly', () => {
         if (!email || !password) return
-
+        cy.wait(1000)
         cy.visit('/profile')
 
         // Verify user information is displayed
@@ -44,7 +44,7 @@ describe('Profile & Password Change', () => {
 
     it('should show validation errors for empty password change form', () => {
         if (!email || !password) return
-
+        cy.wait(1000)
         cy.visit('/profile')
 
         // Try to submit empty form
@@ -58,7 +58,7 @@ describe('Profile & Password Change', () => {
 
     it('should show error for incorrect current password', () => {
         if (!email || !password) return
-
+        cy.wait(1000)
         cy.visit('/profile')
 
         // Fill form with incorrect current password
@@ -75,7 +75,7 @@ describe('Profile & Password Change', () => {
 
     it('should show error when passwords do not match', () => {
         if (!email || !password) return
-
+        cy.wait(1000)
         cy.visit('/profile')
 
         // Fill form with non-matching passwords
@@ -92,7 +92,7 @@ describe('Profile & Password Change', () => {
 
     it('should show error for password too short', () => {
         if (!email || !password) return
-
+        cy.wait(1000)
         cy.visit('/profile')
 
         // Fill form with short password
@@ -109,7 +109,7 @@ describe('Profile & Password Change', () => {
 
     it('should successfully change password and login with new password', () => {
         if (!email || !password) return
-
+        cy.wait(1000)
         cy.visit('/profile')
 
         // Change password
@@ -164,7 +164,7 @@ describe('Profile & Password Change', () => {
 
     it('should maintain session after password change', () => {
         if (!email || !password) return
-
+        cy.wait(1000)
         cy.visit('/profile')
 
         // Change password

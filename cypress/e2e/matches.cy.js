@@ -69,17 +69,17 @@ describe('Match Management', () => {
         cy.get('.badge, [class*="bg-"]').should('exist')
     })
 
-    it('should edit a match', () => {
+    it('should edit a match score', () => {
         // Navigate to a match detail (assuming we created one or one exists)
         cy.visit('/matchs')
         cy.contains('a', 'Voir').first().click()
 
-        // Click edit
-        cy.contains('button', 'Modifier').click()
+        // Click edit score button (could be "Modifier le score" or "Ajouter le score")
+        cy.contains('button', /Modifier le score|Ajouter le score/).click()
 
         // Change score
-        cy.get('input[name="score_domicile"]').clear().type('3')
-        cy.get('input[name="score_exterieur"]').clear().type('1')
+        cy.get('#score_equipe').clear().type('3')
+        cy.get('#score_adversaire').clear().type('1')
 
         // Save
         cy.contains('button', 'Enregistrer').click()
@@ -89,22 +89,22 @@ describe('Match Management', () => {
     })
 
     it('should delete a match', () => {
-        // Create a dummy match to delete to avoid destroying real test data if possible
-        // Or just delete the one we created.
-        // For now, let's assume we delete the first one found, but ideally we should create one first.
-        // Let's rely on the create test having run before, or just pick one.
-
         cy.visit('/matchs')
         cy.contains('a', 'Voir').first().click()
 
-        // Click delete
+        // Enter edit mode to access delete button
+        cy.contains('button', 'Modifier').click()
+
+        // Click delete button
         cy.contains('button', 'Supprimer').click()
 
-        // Confirm if there's a modal
-        // cy.contains('button', 'Confirmer').click() 
+        // Confirm deletion in the alert dialog
+        cy.get('div[role="alertdialog"]').within(() => {
+            cy.contains('button', 'Supprimer').click()
+        })
 
         // Should redirect to list
-        cy.url().should('not.include', '/matchs/') // Should be back to list, check path
         cy.url().should('match', /\/matchs$/)
+        cy.url().should('not.include', '/matchs/')
     })
 })

@@ -36,16 +36,18 @@ describe('Authentication & Security', () => {
     })
 
     it('should show error message with invalid credentials', () => {
+        cy.wait(500)
         cy.visit('/login')
-        cy.get('input[name="email"]').type('wrong@example.com')
+        cy.get('input[name="identifier"]').type('wrong@example.com')
         cy.get('input[name="password"]').type('wrongpassword')
         cy.contains('button', 'Se connecter').click()
 
         // Should stay on login page
         cy.url().should('include', '/login')
 
-        // Should show error message (adjust selector based on actual UI)
-        cy.contains('Identifiants invalides').should('be.visible')
+        // Should show error message (toast)
+        cy.contains('La connexion a échoué').should('be.visible')
+        cy.contains('Veuillez vérifier votre login et mot de passe.').should('be.visible')
     })
 
     it('should persist session on refresh', () => {
