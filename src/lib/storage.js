@@ -638,23 +638,73 @@ export const createMatch = async (data) => {
     await supabase.from('match_partie').delete().eq('id', newPartie.id);
     await supabase.from('matchs').delete().eq('id', newMatch.id); // Rollback
     throw updateMatchError;
-    await supabase.storage.from(MATCH_PHOTO_BUCKET_NAME).remove(matchData.photos);
   }
 
+  return newMatch;
+};
+
+export const updateMatch = async (id, data) => {
+  const dataToUpdate = {
+    date_match: data.date_match,
+    heure: data.heure,
+    ville: data.ville,
+    stade: data.stade,
+    commentaire: data.commentaire,
+    is_multi_partie: data.is_multi_partie,
+    type_match: data.type_match,
+    adversaire_id: data.type_match === 'tournoi' || data.type_match === 'coupe' ? null : data.adversaire_id,
+    titre: data.type_match === 'tournoi' || data.type_match === 'coupe' ? data.titre : null,
+    is_away: data.is_away,
+  };
+
+  const { data: updatedMatch, error } = await supabase
+    .from('matchs')
+    .update(dataToUpdate)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating match:', error.message);
+    throw error;
+  }
+  return updatedMatch;
+};
+
+export const deleteMatch = async (id) => {
+  // 1. Get match to find photos
+  const { data: match } = await supabase
+    .from('matchs')
+    .select('photos')
+    .eq('id', id)
+    .single();
+
+  // 2. Delete photos from storage
+  if (match?.photos && match.photos.length > 0) {
+    const { error: storageError } = await supabase.storage
+      .from(MATCH_PHOTO_BUCKET_NAME)
+      .remove(match.photos);
+    if (storageError) {
+      console.error('Error deleting match photos:', storageError);
+    }
+  }
+
+  // 3. Delete related data
   await supabase.from('buts').delete().eq('match_id', id);
   await supabase.from('composition').delete().eq('match_id', id);
   await supabase.from('match_partie').delete().eq('match_id', id);
 
+  // 4. Delete the match itself
   const { error } = await supabase
     .from('matchs')
     .delete()
     .eq('id', id);
+
   if (error) {
     console.error('Error deleting match:', error.message);
     throw error;
   }
 };
-
 
 // --- Match Parties (Supabase) ---
 export const createPartie = async (partieData) => {
@@ -704,7 +754,6 @@ export const deletePartie = async (id) => {
     throw error;
   }
 };
-
 
 // --- Composition (Supabase) ---
 export const getCompositionForMatch = async (matchId) => {
