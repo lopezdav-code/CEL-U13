@@ -638,36 +638,6 @@ export const createMatch = async (data) => {
     await supabase.from('match_partie').delete().eq('id', newPartie.id);
     await supabase.from('matchs').delete().eq('id', newMatch.id); // Rollback
     throw updateMatchError;
-  }
-
-  return newMatch;
-};
-
-export const updateMatch = async (id, data) => {
-  // Prepare data to ensure consistency for special types
-  const dataToUpdate = { ...data };
-  if (data.type_match === 'tournoi' || data.type_match === 'coupe') {
-    dataToUpdate.adversaire_id = null;
-  } else {
-    dataToUpdate.titre = null;
-  }
-
-  const { data: updatedMatch, error } = await supabase
-    .from('matchs')
-    .update(dataToUpdate)
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) {
-    console.error('Error updating match:', error.message);
-    throw error;
-  }
-  return updatedMatch;
-};
-
-export const deleteMatch = async (id) => {
-  const { data: matchData } = await supabase.from('matchs').select('photos').eq('id', id).single();
-  if (matchData && matchData.photos) {
     await supabase.storage.from(MATCH_PHOTO_BUCKET_NAME).remove(matchData.photos);
   }
 
