@@ -24,6 +24,7 @@ describe('Feature Tests', () => {
     })
 
     it('should allow interaction with the quiz', () => {
+        cy.wait(1000)
         cy.visit('/quiz')
         cy.get('h1').should('contain', 'Quiz')
         // Check for start button or question
