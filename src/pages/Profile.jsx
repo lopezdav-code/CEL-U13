@@ -10,7 +10,6 @@ import { Helmet } from 'react-helmet';
 
 const Profile = () => {
     const { user, profile, changePassword } = useAuth();
-    const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -18,10 +17,6 @@ const Profile = () => {
 
     const validateForm = () => {
         const newErrors = {};
-
-        if (!currentPassword) {
-            newErrors.currentPassword = 'Le mot de passe actuel est requis';
-        }
 
         if (!newPassword) {
             newErrors.newPassword = 'Le nouveau mot de passe est requis';
@@ -47,11 +42,10 @@ const Profile = () => {
         }
 
         setLoading(true);
-        const { error } = await changePassword(currentPassword, newPassword);
+        const { error } = await changePassword(null, newPassword);
 
         if (!error) {
             // Reset form on success
-            setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
             setErrors({});
@@ -181,28 +175,7 @@ const Profile = () => {
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleChangePassword} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="currentPassword">
-                                        Mot de passe actuel <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                        id="currentPassword"
-                                        type="password"
-                                        placeholder="Entrez votre mot de passe actuel"
-                                        value={currentPassword}
-                                        onChange={(e) => {
-                                            setCurrentPassword(e.target.value);
-                                            if (errors.currentPassword) {
-                                                setErrors({ ...errors, currentPassword: null });
-                                            }
-                                        }}
-                                        className={errors.currentPassword ? 'border-red-500' : ''}
-                                        disabled={loading}
-                                    />
-                                    {errors.currentPassword && (
-                                        <p className="text-sm text-red-500">{errors.currentPassword}</p>
-                                    )}
-                                </div>
+
 
                                 <div className="space-y-2">
                                     <Label htmlFor="newPassword">

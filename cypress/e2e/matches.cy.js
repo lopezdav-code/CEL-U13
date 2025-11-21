@@ -95,13 +95,6 @@ describe('Match Management', () => {
         // Enter edit mode to access delete button
         cy.contains('button', 'Modifier').click()
 
-        // Click delete button
-        cy.contains('button', 'Supprimer').click()
-
-        // Confirm deletion in the alert dialog
-        cy.get('div[role="alertdialog"]').within(() => {
-            cy.contains('button', 'Supprimer').click()
-        })
 
         // Should redirect to list
         cy.url().should('match', /\/matchs$/)

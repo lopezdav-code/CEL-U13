@@ -14,8 +14,14 @@ Cypress.Commands.add('login', (email, password) => {
     const loginPassword = password || Cypress.env('TEST_PASSWORD')
 
     cy.visit('/login')
-    // Wait for the form to be visible (handling framer-motion animations)
-    cy.get('#identifier').should('be.visible').type(loginEmail)
+    // Wait for the form to be visible and stable (handling framer-motion animations or hydration)
+    cy.wait(500)
+
+    cy.get('#identifier').should('be.visible').clear().type(loginEmail)
     cy.get('#password').should('be.visible').type(loginPassword)
     cy.contains('button', 'Se connecter').should('be.visible').click()
+
+    // Wait for login to complete and redirect (check for avatar)
+    // This ensures that when this command finishes, the session is fully established
+    cy.get('header button .h-9.w-9', { timeout: 10000 }).should('be.visible')
 })

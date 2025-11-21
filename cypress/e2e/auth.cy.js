@@ -1,26 +1,30 @@
 describe('Authentication & Security', () => {
     beforeEach(() => {
+        cy.wait(500)
         cy.visit('/')
     })
 
     it('should display the login page when accessing protected route', () => {
         // Try to access a protected route directly
+        cy.wait(500)
         cy.visit('/joueuses')
 
         // Should be redirected to login
         cy.url().should('include', '/login')
     })
-
     it('should show validation errors for empty login form', () => {
+        cy.wait(500)
         cy.visit('/login')
         cy.contains('button', 'Se connecter').click()
+        cy.wait(500)
         cy.url().should('include', '/login')
     })
-
     it('should login successfully with valid credentials', () => {
         const email = Cypress.env('TEST_EMAIL')
         const password = Cypress.env('TEST_PASSWORD')
-
+        cy.wait(1000)
+        cy.visit('/login')
+        cy.wait(1000)
         if (!email || !password) {
             cy.log('Skipping test - credentials not configured')
             return
@@ -34,6 +38,7 @@ describe('Authentication & Security', () => {
         // Verify user avatar is present (indicating successful login)
         cy.get('header button .h-9.w-9').should('exist')
     })
+
 
     it('should show error message with invalid credentials', () => {
         cy.wait(500)
@@ -86,4 +91,5 @@ describe('Authentication & Security', () => {
         // Should be redirected to login
         cy.url().should('include', '/login')
     })
+
 })

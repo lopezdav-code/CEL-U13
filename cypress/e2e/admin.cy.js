@@ -5,12 +5,32 @@ describe('Admin Management', () => {
 
         if (!email || !password) return
 
-        cy.login(email, password)
-        cy.wait(1000)
+        cy.session(email, () => {
+            cy.login(email, password)
+        }, {
+            validate: () => {
+                // Validate session by checking if we have session data in localStorage
+                cy.getAllLocalStorage().then((ls) => {
+                    // Check if any origin has data (handling about:blank context)
+                    const hasData = Object.keys(ls).some(origin => {
+                        return ls[origin] && Object.keys(ls[origin]).length > 0
+                    })
+
+                    if (!hasData) {
+                        throw new Error('No session data found')
+                    }
+                })
+            }
+        })
+
+        // Verify authentication succeeded before running tests
+        cy.visit('/')
+        cy.get('header button .h-9.w-9').should('exist')
     })
 
     it('should manage clubs', () => {
         cy.visit('/admin-clubs')
+        cy.wait(1000)
         cy.get('h1').should('contain', 'Gestion des Clubs')
 
         // Check list exists
@@ -25,6 +45,7 @@ describe('Admin Management', () => {
 
     it('should display user list', () => {
         cy.visit('/admin-users')
+        cy.wait(1000)
         cy.get('h1').should('contain', 'Gestion des Utilisateurs')
 
         // Check list exists

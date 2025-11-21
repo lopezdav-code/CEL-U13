@@ -5,8 +5,20 @@ describe('Feature Tests', () => {
 
         if (!email || !password) return
 
-        cy.login(email, password)
-        cy.wait(1000)
+        cy.session(email, () => {
+            cy.login(email, password)
+        }, {
+            validate: () => {
+                cy.getAllLocalStorage().then((ls) => {
+                    const hasData = Object.keys(ls).some(origin => {
+                        return ls[origin] && Object.keys(ls[origin]).length > 0
+                    })
+                    if (!hasData) {
+                        throw new Error('No session data found')
+                    }
+                })
+            }
+        })
     })
 
     it('should display the photos gallery', () => {

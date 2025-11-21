@@ -124,23 +124,7 @@ export const AuthProvider = ({ children }) => {
       return { error };
     }
 
-    // First verify the current password by attempting to sign in
-    const email = user.email;
-    const { error: verifyError } = await supabase.auth.signInWithPassword({
-      email,
-      password: currentPassword,
-    });
-
-    if (verifyError) {
-      toast({
-        variant: "destructive",
-        title: "Mot de passe incorrect",
-        description: "Le mot de passe actuel que vous avez saisi est incorrect.",
-      });
-      return { error: verifyError };
-    }
-
-    // If verification successful, update to new password
+    // Directly update to new password without verifying current password
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
     });
