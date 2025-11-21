@@ -8,9 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 const AdminSpecs = () => {
-    const [documentation, setDocumentation] = useState('');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [loading, setLoading] = useState(true);
+    const [imageSize, setImageSize] = useState(300);
+    const [titleSize, setTitleSize] = useState('5xl');
 
     useEffect(() => {
         // Fetch the functional specifications markdown file
@@ -37,12 +36,6 @@ const AdminSpecs = () => {
     };
 
     // Filter documentation based on search term
-    // Note: Simple line filtering might break markdown structure (images, headers).
-    // For now, we'll just filter if the term is found, but rendering partial markdown is tricky.
-    // A better approach for specs with images is to highlight or just show the whole thing if match found.
-    // But let's keep it simple: if search term exists, we try to find relevant sections or just show all.
-    // Actually, let's just filter lines for text content, but images might get lost if we just filter lines.
-    // Let's stick to the same logic as AdminDocs for consistency, but be aware of limitations.
     const filteredDocumentation = searchTerm
         ? documentation
             .split('\n')
@@ -57,6 +50,20 @@ const AdminSpecs = () => {
             </div>
         );
     }
+
+    const proseClass = `prose prose-slate max-w-none
+        prose-headings:text-gray-900
+        prose-h1:text-${titleSize} prose-h1:font-extrabold prose-h1:border-b-2 prose-h1:pb-4 prose-h1:mb-10 prose-h1:mt-16 prose-h1:text-green-700
+        prose-h2:text-3xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-gray-800
+        prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-4
+        prose-p:text-gray-700 prose-p:leading-relaxed
+        prose-a:text-green-600 prose-a:no-underline hover:prose-a:underline
+        prose-code:text-pink-600 prose-code:bg-pink-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+        prose-pre:bg-gray-900 prose-pre:text-gray-100
+        prose-img:rounded-lg prose-img:shadow-md prose-img:border prose-img:my-8 prose-img:mx-auto prose-img:max-w-[${imageSize}px] prose-img:w-full
+        prose-blockquote:border-l-4 prose-blockquote:border-green-500 prose-blockquote:pl-4 prose-blockquote:italic
+        prose-hr:my-16 prose-hr:border-gray-200 prose-hr:border-2
+    `;
 
     return (
         <>
@@ -88,6 +95,43 @@ const AdminSpecs = () => {
                     </Button>
                 </div>
 
+                {/* Configuration Module */}
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-wrap gap-6 items-center">
+                    <div className="flex items-center gap-3">
+                        <span className="font-semibold text-sm text-gray-700">Taille images :</span>
+                        <div className="flex gap-2">
+                            {[100, 200, 300, 600].map(size => (
+                                <Button
+                                    key={size}
+                                    variant={imageSize === size ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setImageSize(size)}
+                                    className="h-8"
+                                >
+                                    {size}px
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="w-px h-8 bg-gray-200 hidden sm:block"></div>
+                    <div className="flex items-center gap-3">
+                        <span className="font-semibold text-sm text-gray-700">Taille titres :</span>
+                        <div className="flex gap-2">
+                            {['2xl', '3xl', '4xl', '5xl'].map(size => (
+                                <Button
+                                    key={size}
+                                    variant={titleSize === size ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setTitleSize(size)}
+                                    className="h-8 uppercase"
+                                >
+                                    {size}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
                 {/* Search */}
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -102,18 +146,7 @@ const AdminSpecs = () => {
 
                 {/* Documentation Content */}
                 <div className="bg-white rounded-lg shadow-md border p-6 sm:p-8">
-                    <div className="prose prose-slate max-w-none
-            prose-headings:text-gray-900
-            prose-h1:text-5xl prose-h1:font-extrabold prose-h1:border-b-2 prose-h1:pb-4 prose-h1:mb-10 prose-h1:mt-16 prose-h1:text-green-700
-            prose-h2:text-3xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-gray-800
-            prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-4
-            prose-p:text-gray-700 prose-p:leading-relaxed
-            prose-a:text-green-600 prose-a:no-underline hover:prose-a:underline
-            prose-code:text-pink-600 prose-code:bg-pink-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
-            prose-pre:bg-gray-900 prose-pre:text-gray-100
-            prose-img:rounded-lg prose-img:shadow-md prose-img:border prose-img:my-8 prose-img:mx-auto prose-img:max-w-[300px] prose-img:w-full
-            prose-blockquote:border-l-4 prose-blockquote:border-green-500 prose-blockquote:pl-4 prose-blockquote:italic
-          ">
+                    <div className={proseClass}>
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {filteredDocumentation}
                         </ReactMarkdown>

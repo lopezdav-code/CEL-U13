@@ -26,8 +26,8 @@ describe('Feature Tests', () => {
     it('should allow interaction with the quiz', () => {
         cy.wait(1000)
         cy.visit('/quiz')
-        cy.get('h1').should('contain', 'Quiz')
-        // Check for start button or question
-        cy.get('button').contains(/commencer|start|valider/i).should('exist')
+        cy.get('h1').should('contain', 'Qui est cette joueuse ?')
+        // Check for option buttons
+        cy.get('button').should('have.length.at.least', 4)
     })
 })
