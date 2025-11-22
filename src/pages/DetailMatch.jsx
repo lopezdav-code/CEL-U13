@@ -222,6 +222,11 @@ const DetailMatch = () => {
                     <Link to="/matchs">
                         <Button variant="ghost" className="mb-4"><ArrowLeft className="mr-2 h-4 w-4" /> Retour aux matchs</Button>
                     </Link>
+                    <Link to={`/matchs/${id}/live`}>
+                        <Button className="mb-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg">
+                            <Goal className="mr-2 h-4 w-4" /> Lancer le match
+                        </Button>
+                    </Link>
                 </div>
 
                 <HeaderMatch match={match} onEdit={handleEditToggle} isEditing={isEditing} />
