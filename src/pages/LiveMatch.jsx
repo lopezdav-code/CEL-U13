@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getMatch, getCompositionForMatch, getButsForMatch, addBut, removeBut } from '@/lib/storage';
 import { useToast } from '@/components/ui/use-toast';
