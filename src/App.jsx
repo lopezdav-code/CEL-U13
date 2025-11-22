@@ -8,6 +8,7 @@ import DetailJoueuse from '@/pages/DetailJoueuse';
 import ListeMatchs from '@/pages/ListeMatchs';
 import CreerMatch from '@/pages/CreerMatch';
 import DetailMatch from '@/pages/DetailMatch';
+import LiveMatch from '@/pages/LiveMatch';
 import Photos from '@/pages/Photos';
 import Statistiques from '@/pages/Statistiques';
 import AdminClubs from '@/pages/AdminClubs';
@@ -55,6 +56,7 @@ function App() {
                       <Route path="/matchs" element={<ListeMatchs />} />
                       <Route path="/matchs/creer" element={<CreerMatch />} />
                       <Route path="/matchs/:id" element={<DetailMatch />} />
+                      <Route path="/matchs/:id/live" element={<LiveMatch />} />
                       <Route path="/photos" element={<Photos />} />
                       <Route path="/statistiques" element={<Statistiques />} />
                       <Route path="/quiz" element={<Quiz />} />
