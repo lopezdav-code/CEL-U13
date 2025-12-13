@@ -71,6 +71,9 @@ import {
     Upload,
     ArrowLeft,
     ChevronsUpDown,
+    ChevronLeft,
+    ChevronRight,
+    Expand,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -755,6 +758,7 @@ const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
     const { toast } = useToast();
     const [isUploading, setIsUploading] = useState(false);
     const [photoUrls, setPhotoUrls] = useState([]);
+    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
     const fileInputRef = React.useRef(null);
 
     // Load photo URLs when match photos change
@@ -773,6 +777,14 @@ const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
 
         loadPhotoUrls();
     }, [match.photos]);
+
+    const handlePreviousPhoto = () => {
+        setSelectedPhotoIndex((prev) => (prev > 0 ? prev - 1 : photoUrls.length - 1));
+    };
+
+    const handleNextPhoto = () => {
+        setSelectedPhotoIndex((prev) => (prev < photoUrls.length - 1 ? prev + 1 : 0));
+    };
 
     const handleFileChange = async (e) => {
         const files = Array.from(e.target.files);
@@ -817,32 +829,88 @@ const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
     };
 
     return (
-        <Card title="Photos du match" count={match.photos?.length || 0}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {match.photos?.map((photoPath, index) => (
-                    <div key={index} className="relative group">
-                        {photoUrls[index] ? (
-                            <img src={photoUrls[index]} alt={`Match photo ${index + 1}`} className="w-full h-32 object-cover rounded-md" />
-                        ) : (
-                            <div className="w-full h-32 bg-gray-200 rounded-md flex items-center justify-center">
-                                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+        <>
+            <Card title="Photos du match" count={match.photos?.length || 0}>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {match.photos?.map((photoPath, index) => (
+                        <div key={index} className="relative group">
+                            {photoUrls[index] ? (
+                                <img
+                                    src={photoUrls[index]}
+                                    alt={`Match photo ${index + 1}`}
+                                    className="w-full h-32 object-cover rounded-md cursor-pointer"
+                                    onClick={() => setSelectedPhotoIndex(index)}
+                                />
+                            ) : (
+                                <div className="w-full h-32 bg-gray-200 rounded-md flex items-center justify-center">
+                                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                                </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button size="icon" variant="secondary" onClick={() => setSelectedPhotoIndex(index)}>
+                                    <Expand className="w-4 h-4" />
+                                </Button>
+                                <Button size="icon" variant="destructive" onClick={() => handleDeletePhoto(photoPath)}>
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
                             </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button size="icon" variant="destructive" onClick={() => handleDeletePhoto(photoPath)}><Trash2 className="w-4 h-4" /></Button>
                         </div>
+                    ))}
+                </div>
+                {(!match.photos || match.photos.length === 0) && (
+                    <p className="text-gray-500 italic text-center py-4">Aucune photo pour ce match.</p>
+                )}
+                <input type="file" multiple ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                <Button onClick={() => fileInputRef.current.click()} className="w-full mt-4" variant="outline" disabled={isUploading}>
+                    {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                    Ajouter des photos
+                </Button>
+            </Card>
+
+            {/* Photo viewer dialog */}
+            <Dialog open={selectedPhotoIndex !== null} onOpenChange={(open) => !open && setSelectedPhotoIndex(null)}>
+                <DialogContent className="max-w-4xl w-full p-0">
+                    <div className="relative">
+                        {selectedPhotoIndex !== null && photoUrls[selectedPhotoIndex] && (
+                            <>
+                                <img
+                                    src={photoUrls[selectedPhotoIndex]}
+                                    alt={`Match photo ${selectedPhotoIndex + 1}`}
+                                    className="w-full max-h-[80vh] object-contain"
+                                />
+
+                                {/* Navigation buttons */}
+                                {photoUrls.length > 1 && (
+                                    <>
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="absolute left-4 top-1/2 -translate-y-1/2"
+                                            onClick={handlePreviousPhoto}
+                                        >
+                                            <ChevronLeft className="w-6 h-6" />
+                                        </Button>
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="absolute right-4 top-1/2 -translate-y-1/2"
+                                            onClick={handleNextPhoto}
+                                        >
+                                            <ChevronRight className="w-6 h-6" />
+                                        </Button>
+
+                                        {/* Photo counter */}
+                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                                            {selectedPhotoIndex + 1} / {photoUrls.length}
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                        )}
                     </div>
-                ))}
-            </div>
-            {(!match.photos || match.photos.length === 0) && (
-                <p className="text-gray-500 italic text-center py-4">Aucune photo pour ce match.</p>
-            )}
-            <input type="file" multiple ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-            <Button onClick={() => fileInputRef.current.click()} className="w-full mt-4" variant="outline" disabled={isUploading}>
-                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                Ajouter des photos
-            </Button>
-        </Card>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 };
 
