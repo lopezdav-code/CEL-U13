@@ -20,6 +20,7 @@ import {
     removeBut,
     uploadMatchPhotos,
     deleteMatchPhotoFromMatch,
+    getMatchPhotoUrl,
 } from '@/lib/storage';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -753,7 +754,25 @@ const PartieDialog = ({ isOpen, onOpenChange, partie, matchId, clubs, onPartieUp
 const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
     const { toast } = useToast();
     const [isUploading, setIsUploading] = useState(false);
+    const [photoUrls, setPhotoUrls] = useState([]);
     const fileInputRef = React.useRef(null);
+
+    // Load photo URLs when match photos change
+    useEffect(() => {
+        const loadPhotoUrls = async () => {
+            if (!match.photos || match.photos.length === 0) {
+                setPhotoUrls([]);
+                return;
+            }
+
+            const urls = await Promise.all(
+                match.photos.map(photoPath => getMatchPhotoUrl(photoPath))
+            );
+            setPhotoUrls(urls);
+        };
+
+        loadPhotoUrls();
+    }, [match.photos]);
 
     const handleFileChange = async (e) => {
         const files = Array.from(e.target.files);
@@ -802,7 +821,13 @@ const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {match.photos?.map((photoPath, index) => (
                     <div key={index} className="relative group">
-                        <img src={match.photos[index]} alt={`Match photo ${index + 1}`} className="w-full h-32 object-cover rounded-md" />
+                        {photoUrls[index] ? (
+                            <img src={photoUrls[index]} alt={`Match photo ${index + 1}`} className="w-full h-32 object-cover rounded-md" />
+                        ) : (
+                            <div className="w-full h-32 bg-gray-200 rounded-md flex items-center justify-center">
+                                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                            </div>
+                        )}
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button size="icon" variant="destructive" onClick={() => handleDeletePhoto(photoPath)}><Trash2 className="w-4 h-4" /></Button>
                         </div>
