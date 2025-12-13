@@ -420,25 +420,41 @@ const InfoBlock = ({ icon, label, value }) => (
 const CompositionSection = ({ composition, joueuses, matchId, onCompositionUpdate, isPastMatch, onOpenChange }) => {
     const { toast } = useToast();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [selectedJoueuse, setSelectedJoueuse] = useState('');
-    const [isGardienne, setIsGardienne] = useState(false);
+    const [selectedJoueuses, setSelectedJoueuses] = useState([]);
 
     const availableJoueuses = joueuses
         .filter(j => !composition.some(c => c.joueuse_id === j.id))
         .sort((a, b) => a.prenom.localeCompare(b.prenom));
 
-    const handleAddJoueuse = async () => {
-        if (!selectedJoueuse) return;
+    const handleToggleJoueuse = (joueuseId) => {
+        setSelectedJoueuses(prev => {
+            if (prev.includes(joueuseId)) {
+                return prev.filter(id => id !== joueuseId);
+            } else {
+                return [...prev, joueuseId];
+            }
+        });
+    };
+
+    const handleAddJoueuses = async () => {
+        if (selectedJoueuses.length === 0) return;
         try {
-            await addComposition(matchId, parseInt(selectedJoueuse), true, isGardienne);
+            // Ajouter toutes les joueuses sélectionnées
+            await Promise.all(
+                selectedJoueuses.map(joueuseId =>
+                    addComposition(matchId, joueuseId, true, false)
+                )
+            );
             await onCompositionUpdate();
             setIsDialogOpen(false);
-            setSelectedJoueuse('');
-            setIsGardienne(false);
-            toast({ title: "✅ Succès", description: "Joueuse ajoutée à la composition." });
+            setSelectedJoueuses([]);
+            toast({
+                title: "✅ Succès",
+                description: `${selectedJoueuses.length} joueuse(s) ajoutée(s) à la composition.`
+            });
         } catch (err) {
             console.error(err);
-            toast({ title: "❌ Erreur", description: "Impossible d'ajouter la joueuse.", variant: "destructive" });
+            toast({ title: "❌ Erreur", description: "Impossible d'ajouter les joueuses.", variant: "destructive" });
         }
     };
 
@@ -484,27 +500,86 @@ const CompositionSection = ({ composition, joueuses, matchId, onCompositionUpdat
             </div>
             {composition.length === 0 && <p className="text-gray-500 italic text-center py-4">Aucune joueuse dans la composition.</p>}
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                setIsDialogOpen(open);
+                if (!open) setSelectedJoueuses([]);
+            }}>
                 <DialogTrigger asChild>
-                    <Button className="w-full mt-4" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter une joueuse</Button>
+                    <Button className="w-full mt-4" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter des joueuses</Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader>
-                        <DialogTitle>Ajouter une joueuse à la composition</DialogTitle>
-                        <DialogDescription>Sélectionnez une joueuse et indiquez si elle est gardienne.</DialogDescription>
+                        <DialogTitle>Ajouter des joueuses à la composition</DialogTitle>
+                        <DialogDescription>
+                            Sélectionnez les joueuses à ajouter ({availableJoueuses.length} disponibles)
+                        </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <Select onValueChange={setSelectedJoueuse} value={selectedJoueuse}>
-                            <SelectTrigger><SelectValue placeholder="Sélectionner une joueuse" /></SelectTrigger>
-                            <SelectContent>
-                                {availableJoueuses.map(j => <SelectItem key={j.id} value={j.id.toString()}>{j.prenom} {j.nom}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                        <div className="flex items-center space-x-2"><Checkbox id="isGardienne" checked={isGardienne} onCheckedChange={setIsGardienne} /><Label htmlFor="isGardienne">Gardienne</Label></div>
+                    <div className="flex-1 overflow-y-auto py-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            {availableJoueuses.map(joueuse => (
+                                <div
+                                    key={joueuse.id}
+                                    onClick={() => handleToggleJoueuse(joueuse.id)}
+                                    className={`relative cursor-pointer rounded-lg border-2 transition-all hover:shadow-lg ${
+                                        selectedJoueuses.includes(joueuse.id)
+                                            ? 'border-green-600 bg-green-50'
+                                            : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                >
+                                    <div className="p-3 flex flex-col items-center gap-2">
+                                        <div className="relative">
+                                            <Avatar className="w-16 h-16">
+                                                <AvatarImage src={joueuse.avatarUrl} />
+                                                <AvatarFallback className="text-lg">
+                                                    {joueuse.prenom.charAt(0)}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            {selectedJoueuses.includes(joueuse.id) && (
+                                                <div className="absolute -top-1 -right-1 bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                                                    <span className="text-xs font-bold">✓</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="font-semibold text-sm">{joueuse.prenom}</p>
+                                            <p className="text-xs text-gray-600">{joueuse.nom}</p>
+                                            {joueuse.age && (
+                                                <p className="text-xs text-gray-500 mt-1">{joueuse.age} ans</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {availableJoueuses.length === 0 && (
+                            <p className="text-gray-500 italic text-center py-8">
+                                Toutes les joueuses sont déjà dans la composition.
+                            </p>
+                        )}
                     </div>
-                    <DialogFooter>
-                        <DialogClose asChild><Button variant="outline">Annuler</Button></DialogClose>
-                        <Button onClick={handleAddJoueuse}>Ajouter</Button>
+                    <DialogFooter className="border-t pt-4">
+                        <div className="flex items-center justify-between w-full">
+                            <p className="text-sm text-gray-600">
+                                {selectedJoueuses.length > 0 ? (
+                                    <span className="font-semibold text-green-600">
+                                        {selectedJoueuses.length} joueuse(s) sélectionnée(s)
+                                    </span>
+                                ) : (
+                                    'Aucune joueuse sélectionnée'
+                                )}
+                            </p>
+                            <div className="flex gap-2">
+                                <DialogClose asChild>
+                                    <Button variant="outline">Annuler</Button>
+                                </DialogClose>
+                                <Button
+                                    onClick={handleAddJoueuses}
+                                    disabled={selectedJoueuses.length === 0}
+                                >
+                                    Ajouter ({selectedJoueuses.length})
+                                </Button>
+                            </div>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
