@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Plus, Search, Edit, Trash2, Eye, Loader2, Image as ImageIcon, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
@@ -122,6 +122,7 @@ const ListeJoueuses = () => {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{editingJoueuse ? 'Modifier' : 'Ajouter'} une joueuse</DialogTitle>
+                <DialogDescription>Remplissez les informations de la joueuse.</DialogDescription>
               </DialogHeader>
               <FormJoueuse
                 initial={editingJoueuse}
@@ -234,7 +235,7 @@ const FormJoueuse = ({ initial, onSave, onCancel }) => {
   const [prenom, setPrenom] = React.useState(initial?.prenom || '');
   const [dateDeNaissance, setDateDeNaissance] = React.useState(initial?.date_de_naissance || '');
   const [nomParents, setNomParents] = React.useState(initial?.nom_parents || '');
-  const [classe, setClasse] = React.useState(initial?.classe || '');
+  const [classe, setClasse] = React.useState(initial?.classe || undefined);
   const [avatarFile, setAvatarFile] = React.useState(null);
   const [avatarPreview, setAvatarPreview] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
@@ -297,9 +298,9 @@ const FormJoueuse = ({ initial, onSave, onCancel }) => {
     await onSave({
       nom,
       prenom,
-      date_de_naissance: dateDeNaissance,
+      date_de_naissance: dateDeNaissance || null, // Convert empty string to null
       nom_parents: nomParents,
-      classe,
+      classe: classe || null, // Convert undefined to null
       photo_principale: joueuseData?.photo_principale,
     }, avatarFile);
     setLoading(false);

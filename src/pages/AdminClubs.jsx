@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { getClubs, createClub, updateClub, deleteClub } from '@/lib/storage';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Plus, Edit, Trash2, Shield, MapPin, Image as ImageIcon, Upload } from 'lucide-react';
@@ -136,6 +136,7 @@ const AdminClubs = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingClub ? 'Modifier le Club' : 'Nouveau Club'}</DialogTitle>
+            <DialogDescription>Remplissez les informations du club.</DialogDescription>
           </DialogHeader>
           <ClubForm club={editingClub} onSave={handleSave} onCancel={() => setDialogOpen(false)} />
         </DialogContent>

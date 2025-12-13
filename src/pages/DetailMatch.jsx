@@ -33,6 +33,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogFooter,
     DialogClose,
     DialogTrigger, // Added DialogTrigger
@@ -484,7 +485,10 @@ const CompositionSection = ({ composition, joueuses, matchId, onCompositionUpdat
                     <Button className="w-full mt-4" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter une joueuse</Button>
                 </DialogTrigger>
                 <DialogContent>
-                    <DialogHeader><DialogTitle>Ajouter une joueuse à la composition</DialogTitle></DialogHeader>
+                    <DialogHeader>
+                        <DialogTitle>Ajouter une joueuse à la composition</DialogTitle>
+                        <DialogDescription>Sélectionnez une joueuse et indiquez si elle est gardienne.</DialogDescription>
+                    </DialogHeader>
                     <div className="space-y-4 py-4">
                         <Select onValueChange={setSelectedJoueuse} value={selectedJoueuse}>
                             <SelectTrigger><SelectValue placeholder="Sélectionner une joueuse" /></SelectTrigger>
@@ -561,7 +565,10 @@ const ButsSection = ({ buts, composition, matchId, onButsUpdate, isPastMatch, on
                     <Button className="w-full mt-4" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter une buteuse</Button>
                 </DialogTrigger>
                 <DialogContent>
-                    <DialogHeader><DialogTitle>Ajouter une buteuse</DialogTitle></DialogHeader>
+                    <DialogHeader>
+                        <DialogTitle>Ajouter une buteuse</DialogTitle>
+                        <DialogDescription>Sélectionnez une joueuse et le nombre de buts marqués.</DialogDescription>
+                    </DialogHeader>
                     <div className="space-y-4 py-4">
                         <Select onValueChange={setSelectedJoueuse} value={selectedJoueuse}>
                             <SelectTrigger><SelectValue placeholder="Sélectionner une joueuse" /></SelectTrigger>
@@ -690,7 +697,10 @@ const PartieDialog = ({ isOpen, onOpenChange, partie, matchId, clubs, onPartieUp
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent>
-                <DialogHeader><DialogTitle>{isMultiPartie ? 'Modifier la partie' : 'Modifier le score'}</DialogTitle></DialogHeader>
+                <DialogHeader>
+                    <DialogTitle>{isMultiPartie ? 'Modifier la partie' : 'Modifier le score'}</DialogTitle>
+                    <DialogDescription>Modifiez les scores et les informations de la partie.</DialogDescription>
+                </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -749,13 +759,26 @@ const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
+        // Validate file sizes (5MB max per file)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const oversizedFiles = files.filter(file => file.size > maxSize);
+        if (oversizedFiles.length > 0) {
+            toast({
+                title: "❌ Fichier(s) trop lourd(s)",
+                description: `${oversizedFiles.length} photo(s) dépassent la limite de 5MB. Veuillez réduire la taille des images.`,
+                variant: "destructive"
+            });
+            e.target.value = null;
+            return;
+        }
+
         setIsUploading(true);
         try {
             await uploadMatchPhotos(match.id, files);
             await onPhotosUpdate();
             toast({ title: "✅ Succès", description: "Photo(s) ajoutée(s)." });
         } catch (err) {
-            console.error(err);
+            console.error('Error uploading match photo:', err);
             toast({ title: "❌ Erreur", description: "Impossible d'ajouter la/les photo(s).", variant: "destructive" });
         } finally {
             setIsUploading(false);

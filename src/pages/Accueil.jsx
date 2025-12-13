@@ -6,7 +6,7 @@ import { getTeamStats, getJoueuses, getMatchs, getCoaches, updateCoach } from '@
 import { Loader2, Calendar, Eye, Target, Cake, ExternalLink, Shield, Home, Plane, User, Edit, Camera, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
@@ -178,6 +178,7 @@ const EditCoachDialog = ({ coach, open, onOpenChange, onCoachUpdate }) => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifier le coach</DialogTitle>
+            <DialogDescription>Modifiez les informations et la photo du coach.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col items-center gap-4">
