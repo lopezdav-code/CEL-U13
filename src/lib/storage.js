@@ -1146,7 +1146,21 @@ export const getOpponentStats = async () => {
 
 // --- Users (Admin) ---
 export const getUsers = async () => {
-  const { data, error } = await supabase.functions.invoke('list-users');
+  // Vérifier la session avant d'appeler la fonction
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+  console.log('Session:', session);
+  console.log('Session error:', sessionError);
+
+  if (!session) {
+    throw new Error('Vous devez être connecté pour accéder à cette fonctionnalité');
+  }
+
+  const { data, error } = await supabase.functions.invoke('list-users', {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    }
+  });
 
   if (error) {
     console.error('Fetch error from list-users function:', error);
