@@ -44,7 +44,7 @@ const Layout = ({ children }) => {
       <aside className="w-64 bg-white border-r border-gray-200 hidden lg:flex flex-col">
         <div className="h-16 flex items-center justify-center border-b">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Logo" className="h-8 w-auto" />
             <span className="font-bold text-lg text-gray-800">U13 F-ESTL</span>
           </Link>
         </div>
@@ -153,7 +153,7 @@ const Layout = ({ children }) => {
               {/* Logo for mobile */}
               <div className="lg:hidden flex-1 flex justify-center">
                 <Link to="/" className="flex items-center gap-2">
-                  <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
+                  <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Logo" className="h-8 w-auto" />
                   <span className="font-bold text-sm text-gray-800">U13 F-ESTL</span>
                 </Link>
               </div>
