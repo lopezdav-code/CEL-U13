@@ -46,41 +46,48 @@ const findNextBirthday = (joueuses) => {
 };
 
 const MatchTable = ({ title, matches, isUpcoming = false, showTypeColumn = false }) => {
-  if (matches.length === 0 && !isUpcoming) return <p className="text-gray-500 italic">Aucun résultat pour le moment.</p>;
-  if (matches.length === 0 && isUpcoming) return <p className="text-gray-500 italic">Aucun match à venir programmé.</p>;
+  if (matches.length === 0 && !isUpcoming) return <p className="text-sm sm:text-base text-gray-500 italic">Aucun résultat pour le moment.</p>;
+  if (matches.length === 0 && isUpcoming) return <p className="text-sm sm:text-base text-gray-500 italic">Aucun match à venir programmé.</p>;
 
   return (
     <div>
-      {title && <h3 className="text-xl font-semibold text-gray-700 mb-3">{title}</h3>}
+      {title && <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3">{title}</h3>}
       <div className="overflow-x-auto border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Adversaire / Titre</TableHead>
-              <TableHead>Lieu</TableHead>
-              {showTypeColumn && <TableHead>Type</TableHead>}
-              {!isUpcoming && <TableHead>Score</TableHead>}
-              {!isUpcoming && <TableHead>Résultat</TableHead>}
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-xs sm:text-sm">Date</TableHead>
+              <TableHead className="text-xs sm:text-sm">Adversaire / Titre</TableHead>
+              <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Lieu</TableHead>
+              {showTypeColumn && <TableHead className="text-xs sm:text-sm hidden md:table-cell">Type</TableHead>}
+              {!isUpcoming && <TableHead className="text-xs sm:text-sm">Score</TableHead>}
+              {!isUpcoming && <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Résultat</TableHead>}
+              <TableHead className="text-right text-xs sm:text-sm">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {matches.map(match => (
               <TableRow key={match.id}>
-                <TableCell>{new Date(match.date_match).toLocaleDateString('fr-FR')}</TableCell>
-                <TableCell className="font-medium">{match.titre || match.nom_adversaire || 'À définir'}</TableCell>
-                <TableCell>
+                <TableCell className="text-xs sm:text-sm whitespace-nowrap">{new Date(match.date_match).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</TableCell>
+                <TableCell className="font-medium text-xs sm:text-sm">
+                  <div className="flex flex-col gap-1">
+                    <span className="line-clamp-2">{match.titre || match.nom_adversaire || 'À définir'}</span>
+                    <span className="sm:hidden flex items-center gap-1">
+                      {match.is_away ? <Plane className="w-3 h-3 text-blue-500" /> : <Home className="w-3 h-3 text-green-500" />}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
                   {match.is_away ? <Plane className="w-4 h-4 text-blue-500" title="Match à l'extérieur" /> : <Home className="w-4 h-4 text-green-500" title="Match à domicile" />}
                 </TableCell>
                 {showTypeColumn && (
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     {match.is_multi_partie ? (
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 whitespace-nowrap">
                         Plateau
                       </span>
                     ) : (
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 whitespace-nowrap">
                         Match simple
                       </span>
                     )}
@@ -88,20 +95,20 @@ const MatchTable = ({ title, matches, isUpcoming = false, showTypeColumn = false
                 )}
                 {!isUpcoming && (
                   <>
-                    <TableCell>
+                    <TableCell className="text-xs sm:text-sm">
                       {match.is_multi_partie ? (
-                        <div className="flex items-center gap-2 text-xs">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs">
                           <span className="font-bold text-green-600">V:{match.partie_stats.wins}</span>
                           <span className="font-bold text-gray-600">N:{match.partie_stats.draws}</span>
                           <span className="font-bold text-red-600">D:{match.partie_stats.losses}</span>
                         </div>
                       ) : (
-                        `${match.score_equipe ?? '-'} - ${match.score_adversaire ?? '-'}`
+                        <span className="whitespace-nowrap">{`${match.score_equipe ?? '-'} - ${match.score_adversaire ?? '-'}`}</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       {!match.is_multi_partie && (
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${
                           match.score_equipe === null || match.score_adversaire === null ? 'bg-gray-100 text-gray-800' :
                           match.score_equipe > match.score_adversaire ? 'bg-green-100 text-green-800' :
                           match.score_equipe < match.score_adversaire ? 'bg-red-100 text-red-800' :
@@ -117,9 +124,9 @@ const MatchTable = ({ title, matches, isUpcoming = false, showTypeColumn = false
                 )}
                 <TableCell className="text-right">
                   <Link to={`/matchs/${match.id}`}>
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <Eye className="w-4 h-4" />
-                      Voir
+                    <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                      <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Voir</span>
                     </Button>
                   </Link>
                 </TableCell>
@@ -237,23 +244,23 @@ const EditCoachDialog = ({ coach, open, onOpenChange, onCoachUpdate }) => {
 
 const CoachesSection = ({ coaches, onCoachUpdate }) => {
     const [editingCoach, setEditingCoach] = useState(null);
-  
+
     return (
-      <div className="bg-white p-6 rounded-xl border shadow-sm">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Le Staff</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="bg-white p-4 sm:p-6 rounded-xl border shadow-sm">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Le Staff</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {coaches.map((coach) => (
-            <div key={coach.id} className="relative group flex flex-col items-center text-center gap-2 p-4 bg-gray-50 rounded-lg">
+            <div key={coach.id} className="relative group flex flex-col items-center text-center gap-2 p-3 sm:p-4 bg-gray-50 rounded-lg">
               {coach.photoUrl ? (
-                <img src={coach.photoUrl} alt={`${coach.prenom} ${coach.nom || ''}`} className="w-24 h-24 rounded-full object-cover shadow-md" />
+                <img src={coach.photoUrl} alt={`${coach.prenom} ${coach.nom || ''}`} className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover shadow-md" />
               ) : (
-                <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center shadow-md">
-                  <User className="w-12 h-12 text-gray-500" />
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-300 rounded-full flex items-center justify-center shadow-md">
+                  <User className="w-10 h-10 sm:w-12 sm:h-12 text-gray-500" />
                 </div>
               )}
               <div>
-                <p className="font-semibold text-gray-800">{coach.prenom}</p>
-                <p className="text-sm text-gray-600">{coach.nom}</p>
+                <p className="font-semibold text-sm sm:text-base text-gray-800">{coach.prenom}</p>
+                <p className="text-xs sm:text-sm text-gray-600">{coach.nom}</p>
               </div>
               <Button
                 variant="outline"
@@ -266,7 +273,7 @@ const CoachesSection = ({ coaches, onCoachUpdate }) => {
             </div>
           ))}
         </div>
-        <EditCoachDialog 
+        <EditCoachDialog
             coach={editingCoach}
             open={!!editingCoach}
             onOpenChange={(isOpen) => !isOpen && setEditingCoach(null)}
@@ -370,9 +377,9 @@ const Accueil = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <header className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-8 rounded-xl shadow-lg flex flex-col items-center gap-2">
-            <h1 className="text-4xl font-bold tracking-tight text-center">Tableau de bord de l'équipe</h1>
-            <p className="text-green-100 text-lg">Statistiques globales et suivi du championnat</p>
+        <header className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 sm:p-6 lg:p-8 rounded-xl shadow-lg flex flex-col items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-center">Tableau de bord de l'équipe</h1>
+            <p className="text-green-100 text-sm sm:text-base lg:text-lg text-center">Statistiques globales et suivi du championnat</p>
         </header>
 
         <CoachesSection coaches={coaches} onCoachUpdate={loadData} />
@@ -397,23 +404,25 @@ const Accueil = () => {
             )}
         </div>
 
-        <div className="bg-white p-6 rounded-xl border shadow-sm space-y-6">
-          <div className="flex flex-wrap justify-between items-center gap-4">
+        <div className="bg-white p-4 sm:p-6 rounded-xl border shadow-sm space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between sm:items-center gap-3 sm:gap-4">
               <div>
-                  <h2 className="text-2xl font-bold text-gray-800">CHMPT FÉMININ U13 DISTRICT</h2>
-                  <p className="text-gray-600">District de Lyon et du Rhône > Poule E</p>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">CHMPT FÉMININ U13 DISTRICT</h2>
+                  <p className="text-sm sm:text-base text-gray-600">District de Lyon et du Rhône > Poule E</p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <a href="https://epreuves.fff.fr/competition/engagement/439177-chmpt-feminin-u13-district/phase/1/5/resultats-et-calendrier" target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" className="gap-2">
+                    <Button variant="outline" className="gap-2 w-full sm:w-auto text-xs sm:text-sm">
                         <ExternalLink className="w-4 h-4" />
-                        Voir sur le site FFF
+                        <span className="hidden sm:inline">Voir sur le site FFF</span>
+                        <span className="sm:hidden">Site FFF</span>
                     </Button>
                 </a>
                 <a href="https://epreuves.fff.fr/competition/club/504303-club-est-lyonnais/equipe/2025_2211_U13F_36/statistiques" target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" className="gap-2">
+                    <Button variant="outline" className="gap-2 w-full sm:w-auto text-xs sm:text-sm">
                         <ExternalLink className="w-4 h-4" />
-                        Voir les stats de notre équipe
+                        <span className="hidden sm:inline">Voir les stats de notre équipe</span>
+                        <span className="sm:hidden">Stats équipe</span>
                     </Button>
                 </a>
               </div>
@@ -421,70 +430,70 @@ const Accueil = () => {
 
           {championnatTeams.length > 0 && (
             <div className="pt-4 border-t">
-              <h3 className="text-lg font-semibold text-gray-700 mb-3">Équipes de la poule</h3>
-              <div className="flex flex-wrap gap-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3">Équipes de la poule</h3>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2 sm:gap-4">
                 {championnatTeams.map(team => (
-                  <div key={team.id} className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-lg border w-28">
+                  <div key={team.id} className="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg border">
                     {team.logoUrl ? (
-                      <img src={team.logoUrl} alt={`Logo ${team.nom}`} className="w-12 h-12 object-contain" />
+                      <img src={team.logoUrl} alt={`Logo ${team.nom}`} className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
                     ) : (
-                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                        <Shield className="w-6 h-6 text-gray-400" />
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                        <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                       </div>
                     )}
-                    <p className="text-xs text-center font-medium text-gray-600">{team.nom}</p>
+                    <p className="text-xs text-center font-medium text-gray-600 line-clamp-2">{team.nom}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="pt-6 border-t space-y-6">
-            <MatchTable 
+          <div className="pt-4 sm:pt-6 border-t space-y-4 sm:space-y-6">
+            <MatchTable
                 title="Matchs à venir"
                 matches={upcomingChampionnatMatchs}
                 isUpcoming={true}
             />
-            
-            <MatchTable 
+
+            <MatchTable
                 title="Résultats passés"
                 matches={playedChampionnatMatchs}
             />
           </div>
 
-          <p className="text-sm text-gray-600 pt-4 border-t">
+          <p className="text-xs sm:text-sm text-gray-600 pt-4 border-t">
             exempt : Il y a 7 équipes dans la poule F. Chaque journée de match, une équipe est exemptée de jouer. Un plateau est alors organisé pour remplacer le match officiel. Le résultat ne compte pas dans le classement final
           </p>
         </div>
 
 
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Matchs Amicaux</h2>
+        <div className="bg-white p-4 sm:p-6 rounded-xl border shadow-sm">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-4">Matchs Amicaux</h2>
           {amicalMatchs.length > 0 ? (
             <MatchTable matches={amicalMatchs} showTypeColumn={true} />
           ) : (
-            <p className="text-gray-500 italic">Aucun match amical pour le moment.</p>
-          )}
-        </div>
-        
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Tournois</h2>
-          {tournoiMatchs.length > 0 ? (
-            <MatchTable matches={tournoiMatchs} showTypeColumn={true} />
-          ) : (
-            <p className="text-gray-500 italic">Aucun tournoi pour le moment.</p>
+            <p className="text-sm sm:text-base text-gray-500 italic">Aucun match amical pour le moment.</p>
           )}
         </div>
 
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Coupe</h2>
-          <p className="text-gray-600 mb-4 italic">
+        <div className="bg-white p-4 sm:p-6 rounded-xl border shadow-sm">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-4">Tournois</h2>
+          {tournoiMatchs.length > 0 ? (
+            <MatchTable matches={tournoiMatchs} showTypeColumn={true} />
+          ) : (
+            <p className="text-sm sm:text-base text-gray-500 italic">Aucun tournoi pour le moment.</p>
+          )}
+        </div>
+
+        <div className="bg-white p-4 sm:p-6 rounded-xl border shadow-sm">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-4">Coupe</h2>
+          <p className="text-xs sm:text-sm lg:text-base text-gray-600 mb-4 italic">
             Chaque année, la Fédération Française de Football organise le Festival Foot U13 Pitch qui réunit l'ensemble des licencié(e)s U13, filles et garçons. Cet évènement se déroule sur trois phases : départementales, régionales et nationale. L'objectif consiste à associer le sportif et l'éducatif, en ajoutant, aux matches et aux ateliers techniques, des quiz éducatifs afin de promouvoir les valeurs déclinées dans le Programme Éducatif Fédéral (Plaisir, Respect, Engagement, Tolérance et Solidarité).
           </p>
           {coupeMatchs.length > 0 ? (
             <MatchTable matches={coupeMatchs} showTypeColumn={true} />
           ) : (
-            <p className="text-gray-500 italic">Aucun match de coupe pour le moment.</p>
+            <p className="text-sm sm:text-base text-gray-500 italic">Aucun match de coupe pour le moment.</p>
           )}
         </div>
 
@@ -494,18 +503,18 @@ const Accueil = () => {
 };
 
 const StatCard = ({ icon, label, value, subValue }) => (
-  <motion.div 
-    className="bg-white p-6 rounded-xl border shadow-sm flex items-center gap-6"
+  <motion.div
+    className="bg-white p-4 sm:p-6 rounded-xl border shadow-sm flex items-center gap-3 sm:gap-6"
     whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }}
     transition={{ type: "spring", stiffness: 300 }}
   >
-    <div className="bg-gray-100 p-4 rounded-full">
+    <div className="bg-gray-100 p-3 sm:p-4 rounded-full flex-shrink-0">
       {icon}
     </div>
-    <div>
-      <p className="text-gray-600 text-base">{label}</p>
-      <p className="text-3xl font-bold text-gray-900">{value ?? '0'}</p>
-      {subValue && <p className="text-sm text-gray-500">{subValue}</p>}
+    <div className="min-w-0 flex-1">
+      <p className="text-gray-600 text-xs sm:text-sm lg:text-base truncate">{label}</p>
+      <p className="text-2xl sm:text-3xl font-bold text-gray-900">{value ?? '0'}</p>
+      {subValue && <p className="text-xs sm:text-sm text-gray-500 truncate">{subValue}</p>}
     </div>
   </motion.div>
 );

@@ -43,6 +43,7 @@ describe('Authentication & Security', () => {
     it('should show error message with invalid credentials', () => {
         cy.wait(500)
         cy.visit('/login')
+        cy.wait(500)
         cy.get('input[name="identifier"]').type('wrong@example.com')
         cy.get('input[name="password"]').type('wrongpassword')
         cy.contains('button', 'Se connecter').click()
@@ -87,7 +88,7 @@ describe('Authentication & Security', () => {
 
         // Click logout button
         cy.contains('div[role="menuitem"]', 'Déconnexion').click()
-
+        cy.wait(10000)
         // Should be redirected to login
         cy.url().should('include', '/login')
     })

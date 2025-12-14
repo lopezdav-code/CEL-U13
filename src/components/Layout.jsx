@@ -3,6 +3,7 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, Users, Shield, Image, BarChart2, LogOut, Menu, X, BrainCircuit, User as UserIcon, Book, BookOpen, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
+import MobileNav from '@/components/MobileNav';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -140,17 +141,20 @@ const Layout = ({ children }) => {
         <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
           <div className="mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              {/* Mobile menu button */}
+              {/* Mobile menu button for admin menu only */}
               <div className="lg:hidden">
-                <Button onClick={() => setIsMenuOpen(!isMenuOpen)} variant="ghost" size="icon">
-                  {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-                </Button>
+                {profile?.role === 'admin' && (
+                  <Button onClick={() => setIsMenuOpen(!isMenuOpen)} variant="ghost" size="icon">
+                    {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                  </Button>
+                )}
               </div>
 
               {/* Logo for mobile */}
-              <div className="lg:hidden">
+              <div className="lg:hidden flex-1 flex justify-center">
                 <Link to="/" className="flex items-center gap-2">
                   <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
+                  <span className="font-bold text-sm text-gray-800">U13 F-ESTL</span>
                 </Link>
               </div>
 
@@ -198,93 +202,74 @@ const Layout = ({ children }) => {
               </div>
             </div>
           </div>
-          {/* Mobile Menu */}
-          {isMenuOpen && (
+          {/* Mobile Admin Menu */}
+          {isMenuOpen && profile?.role === 'admin' && (
             <div className="lg:hidden border-t border-gray-200">
               <nav className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                {navLinks.map(({ to, text, icon: Icon }) => (
-                  <NavLink
-                    key={to}
-                    to={to}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
-                        ? 'bg-green-100 text-green-700'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                      }`
-                    }
-                  >
-                    <Icon className="mr-3 h-6 w-6" />
-                    {text}
-                  </NavLink>
-                ))}
-
-                {profile?.role === 'admin' && (
-                  <>
-                    <div className="mt-4 mb-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Administration
-                    </div>
-                    <NavLink
-                      to="/admin-clubs"
-                      onClick={() => setIsMenuOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
-                          ? 'bg-green-100 text-green-700'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        }`
-                      }
-                    >
-                      <Settings className="mr-3 h-6 w-6" />
-                      Clubs
-                    </NavLink>
-                    <NavLink
-                      to="/admin-users"
-                      onClick={() => setIsMenuOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
-                          ? 'bg-green-100 text-green-700'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        }`
-                      }
-                    >
-                      <Users className="mr-3 h-6 w-6" />
-                      Utilisateurs
-                    </NavLink>
-                    <NavLink
-                      to="/admin-docs"
-                      onClick={() => setIsMenuOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
-                          ? 'bg-green-100 text-green-700'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        }`
-                      }
-                    >
-                      <Book className="mr-3 h-6 w-6" />
-                      Documentation
-                    </NavLink>
-                    <NavLink
-                      to="/admin-specs"
-                      onClick={() => setIsMenuOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
-                          ? 'bg-green-100 text-green-700'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        }`
-                      }
-                    >
-                      <BookOpen className="mr-3 h-6 w-6" />
-                      Spécifications
-                    </NavLink>
-                  </>
-                )}
+                <div className="mb-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Administration
+                </div>
+                <NavLink
+                  to="/admin-clubs"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
+                      ? 'bg-green-100 text-green-700'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  <Settings className="mr-3 h-6 w-6" />
+                  Clubs
+                </NavLink>
+                <NavLink
+                  to="/admin-users"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
+                      ? 'bg-green-100 text-green-700'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  <Users className="mr-3 h-6 w-6" />
+                  Utilisateurs
+                </NavLink>
+                <NavLink
+                  to="/admin-docs"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
+                      ? 'bg-green-100 text-green-700'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  <Book className="mr-3 h-6 w-6" />
+                  Documentation
+                </NavLink>
+                <NavLink
+                  to="/admin-specs"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center px-3 py-2 rounded-md text-base font-medium ${isActive
+                      ? 'bg-green-100 text-green-700'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  <BookOpen className="mr-3 h-6 w-6" />
+                  Spécifications
+                </NavLink>
               </nav>
             </div>
           )}
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-100/50">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-100/50 pb-20 lg:pb-8">
           {children}
         </main>
+        {/* Mobile Bottom Navigation */}
+        <MobileNav />
       </div>
     </div>
   );
