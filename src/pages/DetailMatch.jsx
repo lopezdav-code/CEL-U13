@@ -21,6 +21,7 @@ import {
     uploadMatchPhotos,
     deleteMatchPhotoFromMatch,
     getMatchPhotoUrl,
+    updateMatchAffiche,
 } from '@/lib/storage';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -74,6 +75,9 @@ import {
     ChevronLeft,
     ChevronRight,
     Expand,
+    FileImage,
+    Sparkles,
+    Download,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -282,6 +286,13 @@ const DetailMatch = () => {
                     match={match}
                     onPhotosUpdate={fetchMatchData}
                     onOpenChange={setIsPhotoOpen}
+                />
+
+                <GenerateAfficheSection
+                    match={match}
+                    composition={composition}
+                    buts={buts}
+                    onAfficheGenerated={fetchMatchData}
                 />
             </motion.div>
 
@@ -910,18 +921,20 @@ const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
                     {match.photos?.map((photoPath, index) => (
                         <div key={index} className="relative group">
                             {photoUrls[index] ? (
-                                <img
-                                    src={photoUrls[index]}
-                                    alt={`Match photo ${index + 1}`}
-                                    className="w-full h-32 object-cover rounded-md cursor-pointer"
-                                    onClick={() => setSelectedPhotoIndex(index)}
-                                />
+                                <div className="w-full h-32 bg-gray-100 rounded-md overflow-hidden flex items-center justify-center">
+                                    <img
+                                        src={photoUrls[index]}
+                                        alt={`Match photo ${index + 1}`}
+                                        className="max-w-full max-h-full object-contain cursor-pointer hover:scale-105 transition-transform"
+                                        onClick={() => setSelectedPhotoIndex(index)}
+                                    />
+                                </div>
                             ) : (
                                 <div className="w-full h-32 bg-gray-200 rounded-md flex items-center justify-center">
                                     <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
                                 </div>
                             )}
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
                                 <Button size="icon" variant="secondary" onClick={() => setSelectedPhotoIndex(index)}>
                                     <Expand className="w-4 h-4" />
                                 </Button>
@@ -986,6 +999,421 @@ const PhotosSection = ({ match, onPhotosUpdate, onOpenChange }) => {
                 </DialogContent>
             </Dialog>
         </>
+    );
+};
+
+const GenerateAfficheSection = ({ match, composition, buts, onAfficheGenerated }) => {
+    const { toast } = useToast();
+    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
+    const [photoUrls, setPhotoUrls] = useState([]);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [generatedAfficheUrl, setGeneratedAfficheUrl] = useState(null);
+    const [compressionQuality, setCompressionQuality] = useState('medium');
+    const [estimatedSize, setEstimatedSize] = useState(null);
+    const [webhookUrl, setWebhookUrl] = useState(
+        localStorage.getItem('n8n_webhook_url') || 'https://lopez-dav.app.n8n.cloud/webhook/poster-match-foot'
+    );
+    const [isEditingUrl, setIsEditingUrl] = useState(false);
+
+    // Compression presets
+    const compressionPresets = {
+        low: { quality: 0.5, maxWidth: 800, label: 'Basse (800px, ~100KB)', description: 'Rapide, qualité réduite' },
+        medium: { quality: 0.7, maxWidth: 1200, label: 'Moyenne (1200px, ~200KB)', description: 'Équilibre qualité/taille' },
+        high: { quality: 0.85, maxWidth: 1600, label: 'Haute (1600px, ~400KB)', description: 'Bonne qualité' },
+        max: { quality: 0.95, maxWidth: 2400, label: 'Maximale (2400px, ~800KB)', description: 'Meilleure qualité' }
+    };
+
+    // Save webhook URL to localStorage
+    const handleSaveWebhookUrl = () => {
+        localStorage.setItem('n8n_webhook_url', webhookUrl);
+        setIsEditingUrl(false);
+        toast({
+            title: "✅ Succès",
+            description: "L'URL du webhook a été sauvegardée."
+        });
+    };
+
+    // Load photo URLs when match photos change
+    useEffect(() => {
+        const loadPhotoUrls = async () => {
+            if (!match.photos || match.photos.length === 0) {
+                setPhotoUrls([]);
+                return;
+            }
+
+            const urls = await Promise.all(
+                match.photos.map(photoPath => getMatchPhotoUrl(photoPath))
+            );
+            setPhotoUrls(urls);
+        };
+
+        loadPhotoUrls();
+
+        // Load existing affiche if available
+        if (match.affiche_url) {
+            setGeneratedAfficheUrl(match.affiche_url);
+        }
+    }, [match.photos, match.affiche_url]);
+
+    // Compress and convert image to base64
+    const compressAndConvertToBase64 = async (url, quality, maxWidth) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                // Fetch the image
+                const response = await fetch(url);
+                const blob = await response.blob();
+
+                // Create an image element
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+
+                img.onload = () => {
+                    // Create canvas
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Calculate new dimensions
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    // Draw image on canvas
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convert to base64 with compression
+                    const base64 = canvas.toDataURL('image/jpeg', quality);
+
+                    // Calculate estimated size
+                    const sizeInBytes = Math.round((base64.length * 3) / 4);
+                    const sizeInKB = Math.round(sizeInBytes / 1024);
+                    setEstimatedSize(sizeInKB);
+
+                    // Return base64 without data URL prefix
+                    resolve(base64.split(',')[1]);
+                };
+
+                img.onerror = reject;
+                img.src = URL.createObjectURL(blob);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    };
+
+    // Prepare match data for n8n
+    const prepareMatchData = () => {
+        // Calculate match result
+        let resultText = "";
+        let finalScore = "0 - 0";
+
+        if (!match.is_multi_partie && match.score_equipe !== null && match.score_adversaire !== null) {
+            finalScore = `${match.score_equipe} - ${match.score_adversaire}`;
+            if (match.score_equipe > match.score_adversaire) {
+                resultText = match.is_away ? "VICTOIRE À L'EXTÉRIEUR !" : "VICTOIRE À DOMICILE !";
+            } else if (match.score_equipe < match.score_adversaire) {
+                resultText = match.is_away ? "DÉFAITE À L'EXTÉRIEUR" : "DÉFAITE À DOMICILE";
+            } else {
+                resultText = "MATCH NUL";
+            }
+        }
+
+        // Format date
+        const matchDate = new Date(match.date_match);
+        const formattedDate = matchDate.toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+        }).toUpperCase();
+
+        // Prepare goalscorers
+        const goalscorers = buts.map(but => ({
+            name: `${but.joueuse.prenom} ${but.joueuse.nom}`.toUpperCase(),
+            details: but.nombre_de_buts > 1 ? `(x${but.nombre_de_buts})` : ""
+        }));
+
+        // Prepare team lineup
+        const goalkeeper = composition.find(c => c.gardienne);
+        const outfieldPlayers = composition.filter(c => !c.gardienne);
+
+        const teamLineup = {
+            goalkeeper: goalkeeper ? {
+                number: "1",
+                name: `${goalkeeper.joueuse.prenom} ${goalkeeper.joueuse.nom}`.toUpperCase()
+            } : null,
+            outfield_players: outfieldPlayers.map((comp, index) => ({
+                number: (index + 2).toString(),
+                name: `${comp.joueuse.prenom} ${comp.joueuse.nom}`.toUpperCase()
+            }))
+        };
+
+        return {
+            match_info: {
+                opponent_name: match.nom_adversaire?.toUpperCase() || "ADVERSAIRE",
+                match_date: formattedDate,
+                final_score: finalScore,
+                result_text: resultText
+            },
+            goalscorers: goalscorers,
+            team_lineup: teamLineup
+        };
+    };
+
+    const handleGenerateAffiche = async () => {
+        setIsGenerating(true);
+        try {
+            // Prepare match data
+            const matchData = prepareMatchData();
+
+            // Add image if one is selected
+            if (selectedPhotoIndex !== null && photoUrls[selectedPhotoIndex]) {
+                const preset = compressionPresets[compressionQuality];
+
+                // Compress and convert selected image to base64
+                const imageBase64 = await compressAndConvertToBase64(
+                    photoUrls[selectedPhotoIndex],
+                    preset.quality,
+                    preset.maxWidth
+                );
+
+                matchData.image_base64 = imageBase64;
+            }
+
+            // Send to n8n webhook
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(matchData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            // Save affiche URL to database
+            if (result.url) {
+                await updateMatchAffiche(match.id, result.url);
+                setGeneratedAfficheUrl(result.url);
+                await onAfficheGenerated();
+                toast({
+                    title: "✅ Succès",
+                    description: estimatedSize
+                        ? `L'affiche du match a été générée avec succès ! (${estimatedSize}KB)`
+                        : "L'affiche du match a été générée avec succès !"
+                });
+            } else {
+                throw new Error("URL de l'affiche non reçue");
+            }
+        } catch (error) {
+            console.error('Error generating affiche:', error);
+            toast({
+                title: "❌ Erreur",
+                description: `Impossible de générer l'affiche: ${error.message}`,
+                variant: "destructive"
+            });
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleDownloadAffiche = () => {
+        if (generatedAfficheUrl) {
+            window.open(generatedAfficheUrl, '_blank');
+        }
+    };
+
+    return (
+        <Card title="Générer l'affiche du match" count={generatedAfficheUrl ? 1 : 0}>
+            {generatedAfficheUrl && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-semibold text-green-800 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4" />
+                            Affiche générée
+                        </h3>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleDownloadAffiche}
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Télécharger
+                        </Button>
+                    </div>
+                    <div className="flex justify-center">
+                        <img
+                            src={generatedAfficheUrl}
+                            alt="Affiche du match"
+                            className="max-w-md w-full rounded-md border shadow-sm hover:shadow-lg transition-shadow cursor-pointer"
+                            onClick={handleDownloadAffiche}
+                        />
+                    </div>
+                </div>
+            )}
+
+            <div className="space-y-4">
+                {/* Webhook URL Configuration */}
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                        <Label className="text-sm font-semibold text-blue-900">
+                            URL du webhook n8n
+                        </Label>
+                        {!isEditingUrl ? (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsEditingUrl(true)}
+                            >
+                                <Edit className="mr-1 h-3 w-3" />
+                                Modifier
+                            </Button>
+                        ) : (
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setWebhookUrl(localStorage.getItem('n8n_webhook_url') || 'https://lopez-dav.app.n8n.cloud/webhook/poster-match-foot');
+                                        setIsEditingUrl(false);
+                                    }}
+                                >
+                                    <X className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={handleSaveWebhookUrl}
+                                >
+                                    <Save className="mr-1 h-3 w-3" />
+                                    Enregistrer
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                    {isEditingUrl ? (
+                        <Input
+                            type="url"
+                            value={webhookUrl}
+                            onChange={(e) => setWebhookUrl(e.target.value)}
+                            placeholder="https://votre-instance.app.n8n.cloud/webhook/..."
+                            className="font-mono text-sm"
+                        />
+                    ) : (
+                        <p className="text-xs text-blue-700 font-mono break-all bg-blue-100 p-2 rounded">
+                            {webhookUrl}
+                        </p>
+                    )}
+                </div>
+                <div>
+                    <Label className="text-sm font-semibold mb-2 block">
+                        Sélectionnez une photo du match (optionnel)
+                    </Label>
+                    {match.photos && match.photos.length > 0 ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {match.photos.map((photoPath, index) => (
+                                <div
+                                    key={index}
+                                    onClick={() => setSelectedPhotoIndex(index)}
+                                    className={`relative cursor-pointer rounded-lg border-2 transition-all hover:shadow-lg ${
+                                        selectedPhotoIndex === index
+                                            ? 'border-green-600 ring-2 ring-green-600'
+                                            : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                >
+                                    {photoUrls[index] ? (
+                                        <img
+                                            src={photoUrls[index]}
+                                            alt={`Match photo ${index + 1}`}
+                                            className="w-full h-24 object-cover rounded-md"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-24 bg-gray-200 rounded-md flex items-center justify-center">
+                                            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                                        </div>
+                                    )}
+                                    {selectedPhotoIndex === index && (
+                                        <div className="absolute -top-2 -right-2 bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                                            <span className="text-xs font-bold">✓</span>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-gray-500 italic text-center py-4">
+                            Aucune photo disponible. Vous pouvez générer l'affiche sans photo.
+                        </p>
+                    )}
+                    {selectedPhotoIndex !== null && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedPhotoIndex(null)}
+                            className="mt-2"
+                        >
+                            <X className="mr-1 h-3 w-3" />
+                            Désélectionner la photo
+                        </Button>
+                    )}
+                </div>
+
+                {selectedPhotoIndex !== null && (
+                    <div className="space-y-2">
+                        <Label htmlFor="compression-quality" className="text-sm font-semibold">
+                            Qualité de compression
+                        </Label>
+                        <Select value={compressionQuality} onValueChange={setCompressionQuality}>
+                            <SelectTrigger id="compression-quality">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.entries(compressionPresets).map(([key, preset]) => (
+                                    <SelectItem key={key} value={key}>
+                                        <div className="flex flex-col">
+                                            <span className="font-medium">{preset.label}</span>
+                                            <span className="text-xs text-gray-500">{preset.description}</span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {estimatedSize && (
+                            <p className="text-xs text-gray-600 mt-1">
+                                Taille estimée : <span className="font-semibold">{estimatedSize} KB</span>
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                <Button
+                    onClick={handleGenerateAffiche}
+                    disabled={isGenerating}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                    {isGenerating ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Génération en cours...
+                        </>
+                    ) : (
+                        <>
+                            <FileImage className="mr-2 h-4 w-4" />
+                            {selectedPhotoIndex !== null ? 'Générer l\'affiche avec photo' : 'Générer l\'affiche sans photo'}
+                        </>
+                    )}
+                </Button>
+            </div>
+        </Card>
     );
 };
 

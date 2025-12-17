@@ -671,6 +671,21 @@ export const updateMatch = async (id, data) => {
   return updatedMatch;
 };
 
+export const updateMatchAffiche = async (matchId, afficheUrl) => {
+  const { data, error } = await supabase
+    .from('matchs')
+    .update({ affiche_url: afficheUrl })
+    .eq('id', matchId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating match affiche:', error.message);
+    throw error;
+  }
+  return data;
+};
+
 export const deleteMatch = async (id) => {
   // 1. Get match to find photos
   const { data: match } = await supabase
